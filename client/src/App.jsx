@@ -32,6 +32,26 @@ const CloseIcon = () => (
   </svg>
 );
 
+const CpuIcon = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="4" y="4" width="16" height="16" rx="2" />
+    <rect x="9" y="9" width="6" height="6" />
+    <path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3" />
+  </svg>
+);
+
+const ShieldIcon = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+  </svg>
+);
+
+const ZapIcon = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+  </svg>
+);
+
 // Official Brand SVGs
 const LinkedInIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="#0A66C2">
@@ -108,7 +128,7 @@ export default function App() {
 
   return (
     <div className="layout">
-      {/* Background Ambience */}
+      {/* Atmosphere Glows */}
       <div className="radial-glow glow-1" />
       <div className="radial-glow glow-2" />
 
@@ -337,9 +357,93 @@ export default function App() {
             )}
           </div>
         )}
+
+        {/* =========================================================
+            PRODUCT BROCHURE & SYSTEM CAPABILITIES BREAKDOWN
+        ========================================================= */}
+        <section className="brochure-section">
+          <div className="brochure-header">
+            <div className="hero-pill">
+              <span className="sparkle">✦</span> Architecture & Capabilities
+            </div>
+            <h2>What is ChangeWatch & How Does It Work?</h2>
+            <p>
+              ChangeWatch is an autonomous document discrepancy detection engine engineered to eliminate 
+              manual line-by-line verification across critical academic scorecards, legal contracts, and financial reports.
+            </p>
+          </div>
+
+          <div className="brochure-grid">
+            {/* Feature 1 */}
+            <div className="brochure-card">
+              <div className="brochure-icon-wrapper"><ZapIcon /></div>
+              <h3>1. Universal Format Extraction</h3>
+              <p>
+                Eliminates file format boundaries. ChangeWatch accepts <strong>PDFs, Word (.docx), Excel spreadsheets (.xlsx, .csv), plain text</strong>, 
+                and image-based scans with zero manual reformatting.
+              </p>
+              <div className="feature-tags">
+                <span>PDF Parsing</span>
+                <span>Spreadsheets</span>
+                <span>Word Documents</span>
+              </div>
+            </div>
+
+            {/* Feature 2 */}
+            <div className="brochure-card">
+              <div className="brochure-icon-wrapper"><CpuIcon /></div>
+              <h3>2. High-Accuracy OCR Engine</h3>
+              <p>
+                Equipped with optical character recognition to extract data directly from 
+                <strong> screenshots, printed certificates, mark sheets, and scanned forms</strong> where plain text extraction fails.
+              </p>
+              <div className="feature-tags">
+                <span>Image OCR</span>
+                <span>Scan Detection</span>
+                <span>Multi-Resolution</span>
+              </div>
+            </div>
+
+            {/* Feature 3 */}
+            <div className="brochure-card">
+              <div className="brochure-icon-wrapper"><ShieldIcon /></div>
+              <h3>3. Neural Difference Audit</h3>
+              <p>
+                Powered by Groq-accelerated neural inference models that understand semantic context. It isolates score updates, 
+                detects altered clauses, calculates net score variance, and outputs prioritized action items.
+              </p>
+              <div className="feature-tags">
+                <span>Groq LPU Speed</span>
+                <span>Risk Prioritization</span>
+                <span>Smart Summaries</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Core Use Cases Strip */}
+          <div className="usecases-strip">
+            <div className="usecase-col">
+              <span className="usecase-number">01</span>
+              <h4>Scorecards & Rank Lists</h4>
+              <p>Audit marks, ranks, and cutoff revisions across entrance exam updates.</p>
+            </div>
+            <div className="usecase-col">
+              <span className="usecase-number">02</span>
+              <h4>Legal & Service Agreements</h4>
+              <p>Spot hidden clause revisions, payment shifts, and altered penalty clauses.</p>
+            </div>
+            <div className="usecase-col">
+              <span className="usecase-number">03</span>
+              <h4>Financial Spreadsheets</h4>
+              <p>Track balance sheet alterations, formula recalculations, and revised projections.</p>
+            </div>
+          </div>
+        </section>
       </main>
 
-      {/* Founder & Lead Developer Showcase Section */}
+      {/* =========================================================
+          EXECUTIVE FOUNDER & VERIFIED IDENTITY SECTION
+      ========================================================= */}
       <footer className="footer-wrapper">
         <div className="executive-card">
           <div className="card-ambient-light" />
@@ -358,15 +462,15 @@ export default function App() {
               <h2 className="executive-name">Shree Navaneetha V R</h2>
 
               <p className="executive-degree">
-                Bachelor of Engineering • Computer Science & Engineering
+                Bachelor of Engineering (B.E.) in Computer Science & Engineering
               </p>
 
               <div className="divider-line" />
 
               <p className="executive-bio">
-                Designed, architected, and deployed the ChangeWatch document diff system from scratch. 
-                Engineered the backend multi-modal file extraction, OCR parsing pipeline, and Groq-powered 
-                neural analysis engine.
+                Designed, architected, and engineered ChangeWatch from scratch as an independent full-stack AI project. 
+                Built the multi-format ingestion pipelines, embedded OCR processing, client-side glassmorphic architecture, 
+                and Groq-accelerated neural comparison workflows.
               </p>
             </div>
 
@@ -385,7 +489,7 @@ export default function App() {
                   <div className="btn-channel-icon"><LinkedInIcon /></div>
                   <div className="btn-channel-text">
                     <span className="channel-title">Connect on LinkedIn</span>
-                    <span className="channel-sub">Professional Network</span>
+                    <span className="channel-sub">shree-navaneetha-v-r-91aa42417</span>
                   </div>
                   <span className="channel-arrow">↗</span>
                 </a>
