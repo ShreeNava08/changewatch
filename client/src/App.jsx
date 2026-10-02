@@ -102,7 +102,7 @@ export default function App() {
               <input
                 type="file"
                 ref={oldInputRef}
-                accept=".pdf"
+                accept=".pdf,.docx,.txt,.csv,.xlsx,.xls,.png,.jpg,.jpeg,.webp"
                 style={{ display: "none" }}
                 onChange={(e) => e.target.files[0] && setOldFile(e.target.files[0])}
               />

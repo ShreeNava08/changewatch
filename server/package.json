@@ -16,8 +16,10 @@
     "dotenv": "^18.0.4",
     "express": "^5.2.1",
     "groq-sdk": "^1.6.0",
+    "mammoth": "^1.13.0",
     "multer": "^2.4.0",
     "pdf-parse": "^2.4.5",
-    "tesseract.js": "^7.0.0"
+    "tesseract.js": "^7.0.0",
+    "xlsx": "^0.18.5"
   }
 }

@@ -3,7 +3,11 @@ import cors from "cors";
 import multer from "multer";
 import dotenv from "dotenv";
 import fs from "fs";
+import path from "path";
 import { PDFParse } from "pdf-parse";
+import mammoth from "mammoth";
+import * as XLSX from "xlsx";
+import Tesseract from "tesseract.js";
 import Groq from "groq-sdk";
 
 dotenv.config();
@@ -14,26 +18,64 @@ app.use(express.json());
 
 const upload = multer({
   dest: "uploads/",
-  limits: { fileSize: 10 * 1024 * 1024 },
+  limits: { fileSize: 25 * 1024 * 1024 }, // 25MB limit
 });
 
 app.get("/", (req, res) => {
   res.send("ChangeWatch backend is running!");
 });
 
-async function extractTextFromPDF(buffer) {
-  try {
-    const parser = new PDFParse({ data: buffer });
-    const data = await parser.getText();
-    await parser.destroy();
-    return typeof data === "string" ? data : (data.text || "");
-  } catch (err) {
-    const data = await PDFParse(buffer);
+// Universal file extractor supporting PDF, Word, Excel, Plain Text, and Images
+async function extractTextFromFile(file) {
+  const ext = path.extname(file.originalname).toLowerCase();
+
+  // 1. PDF Files
+  if (ext === ".pdf") {
+    const buffer = fs.readFileSync(file.path);
+    try {
+      const parser = new PDFParse({ data: buffer });
+      const data = await parser.getText();
+      await parser.destroy();
+      return typeof data === "string" ? data : (data.text || "");
+    } catch {
+      const data = await PDFParse(buffer);
+      return data.text || "";
+    }
+  }
+
+  // 2. Microsoft Word (.docx)
+  if (ext === ".docx") {
+    const result = await mammoth.extractRawText({ path: file.path });
+    return result.value || "";
+  }
+
+  // 3. Excel Spreadsheets & CSV (.xlsx, .xls, .csv)
+  if (ext === ".xlsx" || ext === ".xls" || ext === ".csv") {
+    const workbook = XLSX.readFile(file.path);
+    let extracted = "";
+    for (const sheetName of workbook.SheetNames) {
+      extracted += `\n--- Sheet: ${sheetName} ---\n`;
+      extracted += XLSX.utils.sheet_to_txt(workbook.Sheets[sheetName]) + "\n";
+    }
+    return extracted;
+  }
+
+  // 4. Plain Text & Markdown (.txt, .md, .rtf, .json)
+  if ([".txt", ".md", ".rtf", ".json", ".log"].includes(ext)) {
+    return fs.readFileSync(file.path, "utf-8");
+  }
+
+  // 5. Scanned Images & Photos (.png, .jpg, .jpeg, .webp) -> OCR Engine
+  if ([".png", ".jpg", ".jpeg", ".webp"].includes(ext)) {
+    console.log(`Running OCR on image file: ${file.originalname}...`);
+    const { data } = await Tesseract.recognize(file.path, "eng");
     return data.text || "";
   }
+
+  // Fallback: try raw text reading
+  return fs.readFileSync(file.path, "utf-8");
 }
 
-// Programmatic diff: Finds exact numbers/words that differ between documents
 function getExactDifferences(oldText, newText) {
   const oldWords = oldText.split(/\s+/).filter(Boolean);
   const newWords = newText.split(/\s+/).filter(Boolean);
@@ -62,44 +104,33 @@ app.post(
       const oldFile = req.files.oldDocument[0];
       const newFile = req.files.newDocument[0];
 
-      const oldBuffer = fs.readFileSync(oldFile.path);
-      const newBuffer = fs.readFileSync(newFile.path);
+      // Extract text based on file format
+      const oldText = await extractTextFromFile(oldFile);
+      const newText = await extractTextFromFile(newFile);
 
-      const oldText = await extractTextFromPDF(oldBuffer);
-      const newText = await extractTextFromPDF(newBuffer);
+      // Clean up uploaded files from disk
+      if (fs.existsSync(oldFile.path)) fs.unlinkSync(oldFile.path);
+      if (fs.existsSync(newFile.path)) fs.unlinkSync(newFile.path);
 
-      fs.unlinkSync(oldFile.path);
-      fs.unlinkSync(newFile.path);
-
-      // Terminal diagnostic check
-      console.log("\n==================== TEXT EXTRACTION CHECK ====================");
-      console.log(`Old Document Contains '585':`, oldText.includes("585"));
-      console.log(`New Document Contains '589':`, newText.includes("589"));
-      console.log(`Old Doc Character Count:`, oldText.trim().length);
-      console.log(`New Doc Character Count:`, newText.trim().length);
-      console.log("===============================================================\n");
-
-      // Check if the PDFs contain selectable text
-      if (!oldText.trim() || !newText.trim()) {
+      if (!oldText.trim() && !newText.trim()) {
         return res.status(400).json({
-          error: "One or both PDFs contain scanned images with no selectable text.",
+          error: "Could not extract readable text from the uploaded files.",
         });
       }
 
-      // Check if both text extractions are 100% identical
       if (oldText.trim() === newText.trim()) {
-        return res.status(400).json({
-          error:
-            "The text extracted from both PDFs is 100% identical. Your marks (585 / 589) are embedded inside an image/table in the PDF that lacks a digital text layer.",
+        return res.json({
+          summary: "Both documents are 100% identical. No textual or numerical differences were detected.",
+          totalChanges: 0,
+          changes: [],
+          actions: ["No action required."],
         });
       }
 
-      // Run code-level diff
       const codeDiff = getExactDifferences(oldText, newText);
-      console.log("Code-detected raw changes:", codeDiff);
 
       if (!process.env.GROQ_API_KEY) {
-        return res.status(500).json({ error: "GROQ_API_KEY is missing in server/.env file." });
+        return res.status(500).json({ error: "GROQ_API_KEY is missing." });
       }
 
       const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
@@ -113,43 +144,47 @@ app.post(
         chatModels[0];
 
       const prompt = `
-You are ChangeWatch, an AI document-change detector.
-Compare the OLD document and NEW document below.
+You are ChangeWatch, an automated document difference analyzer.
+Compare the OLD document and NEW document below line-by-line, word-by-word, and number-by-number.
 
-RAW DIFFERENCES DETECTED BY PARSER:
-Removed/Changed from Old: ${JSON.stringify(codeDiff.removed)}
-Added/Changed in New: ${JSON.stringify(codeDiff.added)}
+Known raw differences detected:
+Removed from Old: ${JSON.stringify(codeDiff.removed.slice(0, 50))}
+Added to New: ${JSON.stringify(codeDiff.added.slice(0, 50))}
 
-You MUST report these differences, especially marks, scores, and numbers.
-Return ONLY valid JSON matching this exact structure:
+Find and report:
+- Score / mark updates, numbers, totals, percentages
+- Clause additions, modifications, or removals
+- Dates, deadlines, terms, and names
+
+Return ONLY valid JSON in this exact structure without markdown backticks:
 {
-  "summary": "Clear summary of all detected changes including marks/scores",
+  "summary": "Clear executive summary of what changed",
   "totalChanges": 1,
   "changes": [
     {
-      "type": "modified",
-      "importance": "important",
-      "title": "Marks / Score Updated",
-      "oldValue": "585",
-      "newValue": "589",
-      "explanation": "Marks updated from 585 to 589"
+      "type": "added | removed | modified",
+      "importance": "important | normal",
+      "title": "Short title describing the change",
+      "oldValue": "old value or snippet",
+      "newValue": "new value or snippet",
+      "explanation": "explanation of what changed"
     }
   ],
   "actions": [
-    "Verify the updated score with the authority"
+    "Recommended next step"
   ]
 }
 
 OLD DOCUMENT:
-${oldText}
+${oldText.slice(0, 15000)}
 
 NEW DOCUMENT:
-${newText}
+${newText.slice(0, 15000)}
 `;
 
       const chatCompletion = await groq.chat.completions.create({
         messages: [
-          { role: "system", content: "You output raw JSON document comparisons." },
+          { role: "system", content: "You output valid JSON document audits." },
           { role: "user", content: prompt },
         ],
         model: activeModel,
@@ -159,18 +194,17 @@ ${newText}
       const responseText = chatCompletion.choices[0]?.message?.content || "{}";
       let comparison = JSON.parse(responseText.trim());
 
-      // FAIL-SAFE: If the AI reported 0 changes but our code diff found differences, inject them directly!
+      // Code-level fallback if AI misses subtle word changes
       if (comparison.totalChanges === 0 && (codeDiff.removed.length > 0 || codeDiff.added.length > 0)) {
-        console.log("AI missed the changes — injecting code-detected diff directly.");
         comparison.totalChanges = Math.max(codeDiff.removed.length, codeDiff.added.length);
         comparison.summary = `Detected ${comparison.totalChanges} updated value(s) between documents.`;
         comparison.changes = codeDiff.added.map((newVal, idx) => ({
           type: "modified",
           importance: "important",
-          title: "Value / Mark Updated",
-          oldValue: codeDiff.removed[idx] || "Not present",
+          title: "Value / Text Updated",
+          oldValue: codeDiff.removed[idx] || "—",
           newValue: newVal,
-          explanation: `Updated from ${codeDiff.removed[idx] || "previous value"} to ${newVal}`,
+          explanation: `Updated from "${codeDiff.removed[idx] || "previous"}" to "${newVal}"`,
         }));
       }
 
@@ -178,20 +212,13 @@ ${newText}
     } catch (error) {
       console.error("SERVER ERROR:", error);
       res.status(500).json({
-        error: error.message || "Something went wrong while comparing the documents.",
+        error: error.message || "Failed to compare documents.",
       });
     }
   }
 );
 
-
-const PORT = 5000;
-const server = app.listen(PORT, () => {
-  console.log(`ChangeWatch backend running on http://localhost:${PORT}`);
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`ChangeWatch server running on port ${PORT}`);
 });
-
-server.on("error", (err) => {
-  console.error("SERVER LISTEN ERROR:", err);
-});
-
-setInterval(() => {}, 60000);
