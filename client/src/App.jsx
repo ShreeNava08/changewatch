@@ -358,9 +358,7 @@ export default function App() {
           </div>
         )}
 
-        {/* =========================================================
-            PRODUCT BROCHURE & SYSTEM CAPABILITIES BREAKDOWN
-        ========================================================= */}
+        {/* Brochure Section */}
         <section className="brochure-section">
           <div className="brochure-header">
             <div className="hero-pill">
@@ -420,7 +418,7 @@ export default function App() {
             </div>
           </div>
 
-          {/* Core Use Cases Strip */}
+          {/* Use cases Strip */}
           <div className="usecases-strip">
             <div className="usecase-col">
               <span className="usecase-number">01</span>
@@ -455,7 +453,7 @@ export default function App() {
                 <span className="badge-founder">FOUNDER & LEAD DEVELOPER</span>
                 <span className="badge-pulse">
                   <span className="pulse-circle"></span>
-                  1st Year CSE (B.E.)
+                  1st Year BE (CSE)
                 </span>
               </div>
 
