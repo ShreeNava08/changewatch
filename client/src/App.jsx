@@ -1,7 +1,7 @@
 import React, { useState, useRef } from "react";
 import "./App.css";
 
-// SVG Icons
+// SVG UI Icons
 const UploadIcon = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -32,6 +32,28 @@ const CloseIcon = () => (
   </svg>
 );
 
+// Official Brand SVGs
+const LinkedInIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="#0A66C2">
+    <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 8.76a1.69 1.69 0 1 0 0-3.38 1.69 1.69 0 0 0 0 3.38m1.4 9.74v-8.37H5.06v8.37h2.8z" />
+  </svg>
+);
+
+const GmailIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24">
+    <path fill="#4285F4" d="M22 6c0-.55-.45-1-1-1H3c-.55 0-1 .45-1 1v.38l10 6.67 10-6.67V6z" />
+    <path fill="#34A853" d="M2 7.78V18c0 .55.45 1 1 1h4v-7.67L2 7.78z" />
+    <path fill="#EA4335" d="M22 7.78l-5 3.55V19h4c.55 0 1-.45 1-1V7.78z" />
+    <path fill="#FBBC05" d="M7 19h10V11.33L12 14.67 7 11.33V19z" />
+  </svg>
+);
+
+const GitHubIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="#FFFFFF">
+    <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0 0 22 12.017C22 6.484 17.522 2 12 2z"/>
+  </svg>
+);
+
 export default function App() {
   const [oldFile, setOldFile] = useState(null);
   const [newFile, setNewFile] = useState(null);
@@ -47,7 +69,7 @@ export default function App() {
   const handleCompare = async (e) => {
     e.preventDefault();
     if (!oldFile || !newFile) {
-      setError("Please select both document versions before running the comparison.");
+      setError("Please upload both document versions before comparing.");
       return;
     }
 
@@ -86,11 +108,11 @@ export default function App() {
 
   return (
     <div className="layout">
-      {/* Background Lighting */}
+      {/* Background Ambience */}
       <div className="radial-glow glow-1" />
       <div className="radial-glow glow-2" />
 
-      {/* Navigation Header */}
+      {/* Navigation */}
       <header className="header">
         <div className="nav-inner">
           <div className="brand">
@@ -100,12 +122,12 @@ export default function App() {
           </div>
           <div className="system-status">
             <span className="pulse-dot" />
-            <span>Inference Engine Ready</span>
+            <span>Neural Engine Online</span>
           </div>
         </div>
       </header>
 
-      {/* Main Container */}
+      {/* Main Workspace */}
       <main className="content">
         <div className="hero">
           <div className="hero-pill">
@@ -217,7 +239,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* Submit & Reset */}
+            {/* Action Buttons */}
             <div className="btn-row">
               <button
                 type="submit"
@@ -250,7 +272,7 @@ export default function App() {
           )}
         </div>
 
-        {/* Results Section */}
+        {/* Results Display */}
         {result && (
           <div className="results card">
             <div className="results-top">
@@ -317,74 +339,92 @@ export default function App() {
         )}
       </main>
 
-      {/* Executive Founder & Verification Section */}
-      <footer className="footer">
-        <div className="footer-panel">
-          <div className="founder-profile">
-            <div className="founder-badge-row">
-              <span className="founder-role-tag">FOUNDER & DEVELOPER</span>
-              <span className="project-status-dot"></span>
-              <span className="project-status-text">First-Year CSE Undergraduate</span>
+      {/* Founder & Lead Developer Showcase Section */}
+      <footer className="footer-wrapper">
+        <div className="executive-card">
+          <div className="card-ambient-light" />
+          
+          <div className="executive-content">
+            {/* Left Column: Founder Bio & Verification */}
+            <div className="founder-section">
+              <div className="status-badge-container">
+                <span className="badge-founder">FOUNDER & LEAD DEVELOPER</span>
+                <span className="badge-pulse">
+                  <span className="pulse-circle"></span>
+                  1st Year CSE (B.E.)
+                </span>
+              </div>
+
+              <h2 className="executive-name">Shree Navaneetha V R</h2>
+
+              <p className="executive-degree">
+                Bachelor of Engineering • Computer Science & Engineering
+              </p>
+
+              <div className="divider-line" />
+
+              <p className="executive-bio">
+                Designed, architected, and deployed the ChangeWatch document diff system from scratch. 
+                Engineered the backend multi-modal file extraction, OCR parsing pipeline, and Groq-powered 
+                neural analysis engine.
+              </p>
             </div>
 
-            <h3 className="founder-name">Shree Navaneetha V R</h3>
-            <p className="founder-title">
-              B.E. in Computer Science & Engineering (1st Year)
-            </p>
-            <p className="founder-bio">
-              Architected and engineered ChangeWatch from scratch as an independent full-stack project,
-              combining modern web technologies, multi-format file extraction, OCR, and Groq-powered
-              neural inference to automate document comparisons.
-            </p>
-          </div>
+            {/* Right Column: Direct Channels & Profiles */}
+            <div className="channels-section">
+              <span className="channels-header">DIRECT CONTACT & PROFILES</span>
 
-          <div className="connect-module">
-            <span className="connect-label">OFFICIAL CHANNELS</span>
-            <div className="connect-actions">
-              {/* LinkedIn Button: Replace the link inside href */}
-              <a
-                href="https://www.linkedin.com/in/shree-navaneetha-v-r-91aa42417"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="connect-btn btn-linkedin"
-              >
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
-                </svg>
-                <span>LinkedIn Profile</span>
-              </a>
+              <div className="channel-buttons">
+                {/* LinkedIn Profile Button */}
+                <a
+                  href="https://www.linkedin.com/in/shree-navaneetha-v-r-91aa42417"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-channel channel-linkedin"
+                >
+                  <div className="btn-channel-icon"><LinkedInIcon /></div>
+                  <div className="btn-channel-text">
+                    <span className="channel-title">Connect on LinkedIn</span>
+                    <span className="channel-sub">Professional Network</span>
+                  </div>
+                  <span className="channel-arrow">↗</span>
+                </a>
 
-              {/* Direct Email Button: Replace YOUR_EMAIL@gmail.com */}
-              <a
-                href="mailto:shreenava2008@gmail.com"
-                className="connect-btn btn-email"
-              >
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect width="20" height="16" x="2" y="4" rx="2" />
-                  <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-                </svg>
-                <span>Direct Email</span>
-              </a>
+                {/* Email Direct Channel Button */}
+                <a
+                  href="mailto:shreenava2008@gmail.com"
+                  className="btn-channel channel-gmail"
+                >
+                  <div className="btn-channel-icon"><GmailIcon /></div>
+                  <div className="btn-channel-text">
+                    <span className="channel-title">Send Direct Email</span>
+                    <span className="channel-sub">shreenava2008@gmail.com</span>
+                  </div>
+                  <span className="channel-arrow">↗</span>
+                </a>
 
-              {/* GitHub Button */}
-              <a
-                href="https://github.com/ShreeNava08"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="connect-btn btn-github"
-              >
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
-                  <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
-                </svg>
-                <span>Source Repository</span>
-              </a>
+                {/* GitHub Repository Button */}
+                <a
+                  href="https://github.com/ShreeNava08"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-channel channel-github"
+                >
+                  <div className="btn-channel-icon"><GitHubIcon /></div>
+                  <div className="btn-channel-text">
+                    <span className="channel-title">GitHub Profile</span>
+                    <span className="channel-sub">@ShreeNava08 • Source Code</span>
+                  </div>
+                  <span className="channel-arrow">↗</span>
+                </a>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="footer-legal-bar">
-          <div>ChangeWatch • Engineered & Maintained by Shree Navaneetha V R</div>
-          <div>All Systems Operational • Powered by Groq LPU & Vercel Edge</div>
+          <div className="card-footer-strip">
+            <span>ChangeWatch Engine • Designed & Developed by Shree Navaneetha V R</span>
+            <span>Production Deployment • Powered by Groq LPU & Vercel Edge</span>
+          </div>
         </div>
       </footer>
     </div>
