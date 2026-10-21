@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { jsPDF } from "jspdf";
 import "./App.css";
 
 // SVG UI Icons
@@ -66,6 +67,16 @@ const DownloadIcon = () => (
   </svg>
 );
 
+const PdfDocIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+    <polyline points="14 2 14 8 20 8" />
+    <line x1="16" y1="13" x2="8" y2="13" />
+    <line x1="16" y1="17" x2="8" y2="17" />
+    <polyline points="10 9 9 9 8 9" />
+  </svg>
+);
+
 const CopyIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
@@ -95,146 +106,446 @@ const GitHubIcon = () => (
   </svg>
 );
 
-// Pre-packaged realistic sample comparison for instant 1-click test
-const SAMPLE_AUDIT_DATA = {
-  summary:
-    "Round 2 Counseling Cutoff revision detected significant rank shifts across Computer Science and AI branches. Closing ranks relaxed by an average of +440 ranks across premier institutes, intake capacity was doubled for AICTE-approved AI specializations, and the physical reporting window was extended.",
-  totalChanges: 4,
-  changes: [
-    {
-      title: "Computer Science & Engineering (B.E.) — General Merit Cutoff",
-      type: "Rank / Cutoff Shift",
-      importance: "important",
-      oldValue: "Closing Cutoff Rank: 2,450 (Round 1 Allotment)",
-      newValue: "Closing Cutoff Rank: 2,890 (Round 2 Revised Allotment)",
-      explanation:
-        "The cutoff relaxed by +440 ranks in Round 2, increasing admission eligibility for waitlisted candidates."
-    },
-    {
-      title: "Artificial Intelligence & Data Science — Sanctioned Intake",
-      type: "Capacity Metric",
-      importance: "important",
-      oldValue: "Sanctioned Seats: 60 Seats",
-      newValue: "Sanctioned Seats: 120 Seats (AICTE Approved Extension)",
-      explanation:
-        "Branch intake capacity doubled from 60 to 120 seats, which significantly reduced rank competition."
-    },
-    {
-      title: "Tuition & Laboratory Caution Deposit Schedule",
-      type: "Fee Alteration",
-      importance: "standard",
-      oldValue: "Annual Tuition: ₹85,000 / Semester",
-      newValue: "Annual Tuition: ₹85,000 + ₹6,500 Refundable Lab & Library Deposit",
-      explanation:
-        "A mandatory refundable caution deposit has been newly added in the revised counseling notification."
-    },
-    {
-      title: "Physical Document Verification & Reporting Deadline",
-      type: "Date Extension",
-      importance: "standard",
-      oldValue: "Reporting Deadline: October 20, 2026 (5:00 PM)",
-      newValue: "Extended Deadline: October 26, 2026 (5:00 PM)",
-      explanation:
-        "Verification and fee submission window has been officially extended by 6 days."
+// Pre-packaged realistic sample datasets for 4 domain-specific comparison modes
+const AUDIT_MODES = [
+  {
+    id: "academic",
+    name: "Academic & Cutoffs",
+    icon: "🎓",
+    badge: "Ranks, Cutoffs & Seats",
+    tagline: "Pinpoint quota shifts, cutoff relaxation, seat adjustments, and counseling dates.",
+    demoData: {
+      oldName: "Engineering_Cutoff_Round1.pdf",
+      newName: "Engineering_Cutoff_Round2_Revised.pdf",
+      summary: "Round 2 Counseling Cutoff revision detected significant rank shifts across Computer Science and AI branches. Closing ranks relaxed by an average of +440 ranks across premier institutes, intake capacity was doubled for AICTE-approved AI specializations, and the physical reporting window was extended.",
+      totalChanges: 4,
+      changes: [
+        {
+          title: "Computer Science & Engineering (B.E.) — General Merit Cutoff",
+          type: "Rank / Cutoff Shift",
+          importance: "important",
+          oldValue: "Closing Cutoff Rank: 2,450 (Round 1 Allotment)",
+          newValue: "Closing Cutoff Rank: 2,890 (Round 2 Revised Allotment)",
+          explanation: "The cutoff relaxed by +440 ranks in Round 2, increasing admission eligibility for waitlisted candidates."
+        },
+        {
+          title: "Artificial Intelligence & Data Science — Sanctioned Intake",
+          type: "Capacity Metric",
+          importance: "important",
+          oldValue: "Sanctioned Seats: 60 Seats",
+          newValue: "Sanctioned Seats: 120 Seats (AICTE Approved Extension)",
+          explanation: "Branch intake capacity doubled from 60 to 120 seats, which significantly reduced rank competition."
+        },
+        {
+          title: "Tuition & Laboratory Caution Deposit Schedule",
+          type: "Fee Alteration",
+          importance: "standard",
+          oldValue: "Annual Tuition: ₹85,000 / Semester",
+          newValue: "Annual Tuition: ₹85,000 + ₹6,500 Refundable Lab & Library Deposit",
+          explanation: "A mandatory refundable caution deposit has been newly added in the revised counseling notification."
+        },
+        {
+          title: "Physical Document Verification & Reporting Deadline",
+          type: "Date Extension",
+          importance: "standard",
+          oldValue: "Reporting Deadline: October 20, 2026 (5:00 PM)",
+          newValue: "Extended Deadline: October 26, 2026 (5:00 PM)",
+          explanation: "Verification and fee submission window has been officially extended by 6 days."
+        }
+      ],
+      actions: [
+        "Verify your updated Round 2 cutoff rank against candidate allotment lists.",
+        "Ensure the ₹6,500 laboratory deposit receipt is carried during in-person verification.",
+        "Complete reporting before the extended deadline of October 26, 2026 (5:00 PM)."
+      ]
     }
-  ],
-  actions: [
-    "Verify your updated Round 2 cutoff rank against candidate allotment lists.",
-    "Ensure the ₹6,500 laboratory deposit receipt is carried during in-person verification.",
-    "Complete reporting before the extended deadline of October 26, 2026 (5:00 PM)."
-  ]
-};
-
-export default function App() {
-  const [oldFile, setOldFile] = useState(null);
-  const [newFile, setNewFile] = useState(null);
-  const [isDraggingOld, setIsDraggingOld] = useState(false);
-  const [isDraggingNew, setIsDraggingNew] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState(null);
-  const [error, setError] = useState(null);
-  const [toastMessage, setToastMessage] = useState("");
-  const [openFaq, setOpenFaq] = useState(null);
-
-  const oldInputRef = useRef(null);
-  const newInputRef = useRef(null);
-  const resultsRef = useRef(null);
-
-  const showToast = (msg) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(""), 3500);
-  };
-
-  const handleCompare = async (e) => {
-    e.preventDefault();
-    if (!oldFile || !newFile) {
-      setError("Please upload both document versions before comparing.");
-      return;
+  },
+  {
+    id: "legal",
+    name: "Legal & Contracts",
+    icon: "⚖️",
+    badge: "Liability, Notice & Indemnity",
+    tagline: "Flags altered liability caps, shortened termination notice, and hidden penalty terms.",
+    demoData: {
+      oldName: "Vendor_Master_Service_Agreement_v1.0.pdf",
+      newName: "Vendor_Master_Service_Agreement_v2.1_REVISED.pdf",
+      summary: "Critical liability and operational risk shifts detected in vendor revision. The vendor added a hard $50,000 liability cap that now covers data breaches, reduced termination notice from 60 to 14 days, and doubled late payment penalties.",
+      totalChanges: 4,
+      changes: [
+        {
+          title: "Section 8.2 — Limitation of Liability & Data Breach Cap",
+          type: "Liability Ceiling",
+          importance: "important",
+          oldValue: "Total aggregate liability uncapped for confidentiality and data protection incidents.",
+          newValue: "Vendor aggregate liability capped at fees paid in past 30 days, not to exceed $50,000 maximum ceiling.",
+          explanation: "High Legal Exposure: Even in catastrophic data breach events, your recovery is now strictly capped at $50,000."
+        },
+        {
+          title: "Section 12.1 — Termination for Convenience Notice Period",
+          type: "Contract Term",
+          importance: "important",
+          oldValue: "Either party may terminate upon sixty (60) days prior written notice.",
+          newValue: "Vendor may terminate upon fourteen (14) days electronic notice. Customer must provide ninety (90) days notice.",
+          explanation: "Asymmetric Termination: The vendor can cancel services in 14 days, risking operational downtime."
+        },
+        {
+          title: "Section 4.3 — Late Payment Compounding Interest",
+          type: "Financial Term",
+          importance: "standard",
+          oldValue: "Late payments accrue 1.5% simple monthly interest. Net 45 payment terms.",
+          newValue: "Late payments accrue 3.5% monthly compound interest plus $250 penalty per cycle. Net 30 payment terms.",
+          explanation: "Financial Penalty: Payment window shortened by 15 days with interest rate more than doubled."
+        },
+        {
+          title: "Section 16.7 — AI Training & Data Ingestion License",
+          type: "Intellectual Property",
+          importance: "important",
+          oldValue: "(Clause did not exist in original agreement)",
+          newValue: "Customer grants Vendor a perpetual, royalty-free license to use Customer telemetry to train AI models.",
+          explanation: "New Ingestion Clause: Allows vendor to ingest your company's proprietary data for commercial AI training."
+        }
+      ],
+      actions: [
+        "Reject Section 8.2 liability cap and request reinstatement of uncapped data breach indemnification.",
+        "Negotiate Section 12.1 termination notice back to a mutual 60-day written requirement.",
+        "Strike Section 16.7 to preserve proprietary customer data confidentiality."
+      ]
     }
+  },
+  {
+    id: "finance",
+    name: "Invoices & Quotations",
+    icon: "💰",
+    badge: "Unit Rates & Hidden Surcharges",
+    tagline: "Detects unit price increases, unapproved line items, and altered billing cycles.",
+    demoData: {
+      oldName: "SaaS_Enterprise_Estimate_Q1_Approved.xlsx",
+      newName: "Vendor_Final_Invoice_Q2_Billed.xlsx",
+      summary: "Financial discrepancy audit detected a total invoice variance of +$4,820 over approved budget. Discrepancies include an unannounced 18.75% base seat license price hike and a new cloud egress bandwidth surcharge.",
+      totalChanges: 4,
+      changes: [
+        {
+          title: "Enterprise Seat Licenses (50 Users Tier)",
+          type: "Unit Price Hike",
+          importance: "important",
+          oldValue: "Approved Rate: $40.00 / user / month ($2,000.00 total)",
+          newValue: "Billed Rate: $47.50 / user / month ($2,375.00 total)",
+          explanation: "Unit cost increased by +18.75% without prior contractual price change notification."
+        },
+        {
+          title: "Cloud Egress & Data Pipeline Fee",
+          type: "Unapproved Line Item",
+          importance: "important",
+          oldValue: "(Zero line items — bundled within base infrastructure)",
+          newValue: "New Surcharge: $850.00 / month for high-throughput data transfer",
+          explanation: "An unapproved recurring surcharge was introduced outside the agreed scope of work."
+        },
+        {
+          title: "Custom SLA Support & Dedicated Account Manager",
+          type: "Support Fee",
+          importance: "standard",
+          oldValue: "Complimentary Tier 1 dedicated support included in annual contract.",
+          newValue: "Tier 1 dedicated support billed at $600.00 / quarter.",
+          explanation: "Formerly complimentary account management converted into a billable quarterly charge."
+        },
+        {
+          title: "Payment Window & Currency Exchange Clause",
+          type: "Billing Term",
+          importance: "standard",
+          oldValue: "Payment due within Net 60 days. Fixed INR / USD conversion peg.",
+          newValue: "Payment due within Net 15 days. Variable spot exchange rate on payment date.",
+          explanation: "Cash flow risk shifted to buyer via shorter payment cycle and unpegged currency rate."
+        }
+      ],
+      actions: [
+        "Issue formal dispute notice for unapproved $850 cloud data surcharge.",
+        "Request credit note adjustment for the $375 seat license unit price discrepancy.",
+        "Reconcile against approved Q1 purchase order before authorizing accounts payable release."
+      ]
+    }
+  },
+  {
+    id: "policy",
+    name: "Policies & Insurance",
+    icon: "🛡️",
+    badge: "Exclusions & Coverage Caps",
+    tagline: "Surfaces room rent limits, disease waiting period additions, and policy exclusions.",
+    demoData: {
+      oldName: "Corporate_Mediclaim_Policy_2025.pdf",
+      newName: "Corporate_Mediclaim_Policy_2026_Renewal.pdf",
+      summary: "Significant coverage limitations introduced in 2026 policy renewal. Insurer introduced a 1% sum insured capping on hospital room rent and added a mandatory 15% co-payment for robotic surgeries.",
+      totalChanges: 4,
+      changes: [
+        {
+          title: "Hospital Room Rent & ICU Daily Charges",
+          type: "Coverage Sub-limit",
+          importance: "important",
+          oldValue: "No room rent capping (Eligible for Single Private Room AC without sub-limits).",
+          newValue: "Room rent capped at 1% of Sum Insured per day; ICU capped at 2% per day. Proportionate deductions apply.",
+          explanation: "Major Out-of-Pocket Risk: If room rent exceeds the 1% cap, all associated doctor, surgery, and nursing fees will be proportionately slashed."
+        },
+        {
+          title: "Robotic & Modern Advanced Surgeries",
+          type: "Co-Payment Addition",
+          importance: "important",
+          oldValue: "Advanced procedures covered up to 100% of Sum Insured subject to standard deductible.",
+          newValue: "Mandatory 15% employee co-pay applied to robotic surgeries and cyberknife treatments.",
+          explanation: "New out-of-pocket obligation: Employees must now pay 15% of the total surgery cost directly."
+        },
+        {
+          title: "Pre-existing Disease (PED) Waiting Period",
+          type: "Waiting Period",
+          importance: "standard",
+          oldValue: "PED waiting period waived from Day 1 for all full-time employees and dependents.",
+          newValue: "12-month waiting period applied to new dependents added after the renewal date.",
+          explanation: "Dependents enrolled after policy renewal will no longer receive Day 1 pre-existing coverage."
+        },
+        {
+          title: "Maternity & Newborn Initial Hospitalization Limit",
+          type: "Benefit Cap",
+          importance: "standard",
+          oldValue: "Maternity coverage limit: ₹75,000 for normal and cesarean deliveries.",
+          newValue: "Maternity coverage limit increased to ₹90,000; newborn Day 1 coverage included.",
+          explanation: "Favorable Change: ₹15,000 increase in maternity limit with automatic newborn medical coverage."
+        }
+      ],
+      actions: [
+        "Notify employees regarding the 1% room rent cap to prevent proportionate claim deductions.",
+        "Highlight the new 15% co-pay on robotic surgeries in the upcoming HR benefits briefing.",
+        "Verify all existing dependent enrollments are locked prior to renewal cutoff date."
+      ]
+    }
+  }
+];
 
-    setLoading(true);
-    setError(null);
-    setResult(null);
+// Pure Utility Function for Client-Side PDF Generation (decoupled from render)
+function executePdfExport(result, oldFile, newFile, currentMode, onDone, onError) {
+  try {
+    const doc = new jsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: "a4"
+    });
 
-    const formData = new FormData();
-    formData.append("oldDocument", oldFile);
-    formData.append("newDocument", newFile);
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 14;
+    let y = 14;
 
-    try {
-      const response = await fetch("https://changewatch.onrender.com/api/compare", {
-        method: "POST",
-        body: formData,
-      });
+    // Header Banner (Navy/Dark Slate)
+    doc.setFillColor(15, 23, 42); // #0f172a
+    doc.rect(0, 0, pageWidth, 38, "F");
 
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to compare documents.");
+    // ChangeWatch Title
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(18);
+    doc.text("ChangeWatch AI Audit Certificate", margin, 16);
+
+    // Subtitle
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8.5);
+    doc.setTextColor(148, 163, 184); // #94a3b8
+    doc.text("Autonomous Document Discrepancy & Risk Detection Engine", margin, 22);
+    doc.text(`Verified via Groq LPU Neural Inference • Audit Date: ${new Date().toLocaleDateString()}`, margin, 27);
+
+    // Mode Badge Pill in Header
+    doc.setFillColor(37, 99, 235); // #2563eb
+    doc.roundedRect(pageWidth - margin - 52, 12, 52, 7.5, 2, 2, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7.5);
+    doc.text(currentMode.name.toUpperCase(), pageWidth - margin - 26, 17, { align: "center" });
+
+    y = 45;
+
+    // Metadata Overview Box
+    doc.setFillColor(248, 250, 252);
+    doc.setDrawColor(226, 232, 240);
+    doc.roundedRect(margin, y, pageWidth - (margin * 2), 24, 2, 2, "FD");
+
+    doc.setTextColor(51, 65, 85);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8.5);
+    doc.text("Base Document:", margin + 4, y + 6);
+    doc.setFont("helvetica", "normal");
+    doc.text(oldFile?.name || "Original Revision", margin + 34, y + 6);
+
+    doc.setFont("helvetica", "bold");
+    doc.text("Revised Target:", margin + 4, y + 12);
+    doc.setFont("helvetica", "normal");
+    doc.text(newFile?.name || "Updated Revision", margin + 34, y + 12);
+
+    doc.setFont("helvetica", "bold");
+    doc.text("Audit Metrics:", margin + 4, y + 18);
+    doc.setTextColor(225, 29, 72);
+    doc.text(`${result.totalChanges || (result.changes ? result.changes.length : 0)} Discrepancies Flagged`, margin + 34, y + 18);
+
+    y += 31;
+
+    // Executive Summary
+    doc.setTextColor(15, 23, 42);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10.5);
+    doc.text("Executive Audit Summary", margin, y);
+    y += 4.5;
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8.5);
+    doc.setTextColor(51, 65, 85);
+    const summaryLines = doc.splitTextToSize(result.summary || "No summary provided.", pageWidth - (margin * 2) - 8);
+    const summaryBoxHeight = (summaryLines.length * 4.2) + 6;
+
+    doc.setFillColor(241, 245, 249);
+    doc.setDrawColor(203, 213, 225);
+    doc.roundedRect(margin, y, pageWidth - (margin * 2), summaryBoxHeight, 2, 2, "FD");
+    doc.text(summaryLines, margin + 4, y + 4.5);
+
+    y += summaryBoxHeight + 8;
+
+    // Detailed Discrepancy Breakdown Header
+    doc.setTextColor(15, 23, 42);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10.5);
+    doc.text("Detailed Discrepancy Breakdown", margin, y);
+    y += 5.5;
+
+    // Render Each Change Card
+    (result.changes || []).forEach((c, idx) => {
+      const colWidth = (pageWidth - (margin * 2) - 10) / 2;
+      const oldLines = doc.splitTextToSize(c.oldValue || "—", colWidth - 8);
+      const newLines = doc.splitTextToSize(c.newValue || "—", colWidth - 8);
+      const explLines = c.explanation ? doc.splitTextToSize(c.explanation, pageWidth - (margin * 2) - 8) : [];
+
+      const valueHeight = Math.max(oldLines.length, newLines.length) * 4 + 7;
+      const explHeight = c.explanation ? (explLines.length * 3.8) + 6 : 0;
+      const cardHeight = 9 + valueHeight + explHeight;
+
+      // Auto Page Break Check
+      if (y + cardHeight > pageHeight - 20) {
+        doc.addPage();
+        y = 15;
       }
-      setResult(data);
-      setTimeout(() => {
-        resultsRef.current?.scrollIntoView({ behavior: "smooth" });
-      }, 100);
-    } catch (err) {
-      setError(err.message || "An unexpected error occurred while communicating with the server.");
-    } finally {
-      setLoading(false);
+
+      // Card Border
+      doc.setFillColor(255, 255, 255);
+      doc.setDrawColor(c.importance === "important" ? 254 : 226, c.importance === "important" ? 205 : 232, c.importance === "important" ? 211 : 240);
+      doc.roundedRect(margin, y, pageWidth - (margin * 2), cardHeight, 1.5, 1.5, "FD");
+
+      // Left Color Bar
+      doc.setFillColor(c.importance === "important" ? 225 : 59, c.importance === "important" ? 29 : 130, c.importance === "important" ? 72 : 246);
+      doc.rect(margin, y, 2.5, cardHeight, "F");
+
+      // Change Title & Priority Badge
+      doc.setTextColor(15, 23, 42);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(8.5);
+      doc.text(`#${idx + 1}  ${c.title}`, margin + 5, y + 5.5);
+
+      const isImportant = c.importance === "important";
+      doc.setFillColor(isImportant ? 255 : 238, isImportant ? 228 : 242, isImportant ? 230 : 255);
+      doc.roundedRect(pageWidth - margin - 26, y + 2, 22, 4.5, 1, 1, "F");
+      doc.setTextColor(isImportant ? 225 : 79, isImportant ? 29 : 70, isImportant ? 72 : 229);
+      doc.setFontSize(6.5);
+      doc.text(isImportant ? "CRITICAL" : "STANDARD", pageWidth - margin - 15, y + 5.2, { align: "center" });
+
+      let currentCardY = y + 8;
+
+      // Previous Version Box (Rose Tint)
+      doc.setFillColor(254, 242, 242);
+      doc.roundedRect(margin + 4, currentCardY, colWidth, valueHeight - 2, 1, 1, "F");
+      doc.setTextColor(159, 18, 57);
+      doc.setFontSize(7);
+      doc.setFont("helvetica", "bold");
+      doc.text("PREVIOUS VERSION", margin + 6, currentCardY + 3.5);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(71, 85, 105);
+      doc.text(oldLines, margin + 6, currentCardY + 7.5);
+
+      // Revised Version Box (Emerald Tint)
+      doc.setFillColor(240, 253, 244);
+      doc.roundedRect(margin + 4 + colWidth + 2, currentCardY, colWidth, valueHeight - 2, 1, 1, "F");
+      doc.setTextColor(21, 128, 61);
+      doc.setFontSize(7);
+      doc.setFont("helvetica", "bold");
+      doc.text("REVISED TARGET", margin + 6 + colWidth + 2, currentCardY + 3.5);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(71, 85, 105);
+      doc.text(newLines, margin + 6 + colWidth + 2, currentCardY + 7.5);
+
+      currentCardY += valueHeight;
+
+      // AI Interpretation
+      if (c.explanation) {
+        doc.setFillColor(248, 250, 252);
+        doc.roundedRect(margin + 4, currentCardY, pageWidth - (margin * 2) - 8, explHeight - 1.5, 1, 1, "F");
+        doc.setTextColor(79, 70, 229);
+        doc.setFontSize(7);
+        doc.setFont("helvetica", "bold");
+        doc.text("AI Risk Interpretation:", margin + 6, currentCardY + 3.5);
+        doc.setTextColor(51, 65, 85);
+        doc.setFont("helvetica", "normal");
+        doc.text(explLines, margin + 6, currentCardY + 7.5);
+      }
+
+      y += cardHeight + 3.5;
+    });
+
+    // Action Items Section
+    if (result.actions && result.actions.length > 0) {
+      if (y + 35 > pageHeight - 20) {
+        doc.addPage();
+        y = 15;
+      }
+      y += 3;
+      doc.setTextColor(15, 23, 42);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10.5);
+      doc.text("Recommended Action Checklist", margin, y);
+      y += 4.5;
+
+      result.actions.forEach((act) => {
+        const actLines = doc.splitTextToSize(`[x]  ${act}`, pageWidth - (margin * 2) - 6);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        doc.setTextColor(30, 41, 59);
+        doc.text(actLines, margin + 2, y + 3.5);
+        y += (actLines.length * 3.8) + 2;
+      });
     }
-  };
 
-  const loadSampleDemo = () => {
-    setError(null);
-    setOldFile({
-      name: "Engineering_Cutoff_Round1.pdf",
-      size: 1420 * 1024,
-      isDemo: true
-    });
-    setNewFile({
-      name: "Engineering_Cutoff_Round2_Revised.pdf",
-      size: 1540 * 1024,
-      isDemo: true
-    });
-    setResult(SAMPLE_AUDIT_DATA);
-    showToast("Loaded Sample Demo: Round 1 vs Round 2 Cutoff Revision");
-    setTimeout(() => {
-      resultsRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, 150);
-  };
+    // Page Numbers and Footer Verification Stamp
+    const totalPages = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i);
+      doc.setFontSize(7.5);
+      doc.setTextColor(148, 163, 184);
+      doc.text(
+        `ChangeWatch AI Engine • Architected by Shree Navaneetha V R • Page ${i} of ${totalPages}`,
+        pageWidth / 2,
+        pageHeight - 8,
+        { align: "center" }
+      );
+    }
 
-  const copySummaryToClipboard = () => {
-    if (!result) return;
-    const summaryText = `ChangeWatch AI Document Audit Summary:\n${result.summary}\n\nTotal Changes: ${result.totalChanges || 0}\n\nKey Action Items:\n${(result.actions || []).map((a, i) => `${i + 1}. ${a}`).join("\n")}`;
-    navigator.clipboard.writeText(summaryText);
-    showToast("Copied Audit Summary to clipboard!");
-  };
+    const fileSuffix = Math.floor(Math.random() * 1000000);
+    doc.save(`ChangeWatch_Audit_Report_${fileSuffix}.pdf`);
+    if (onDone) onDone();
+  } catch (err) {
+    console.error("PDF generation error:", err);
+    if (onError) onError(err);
+  }
+}
 
-  const downloadReportFile = () => {
-    if (!result) return;
-    const reportContent = `ChangeWatch AI Document Audit Report
+// Pure Utility Function for Plain Text Export
+function executeTextExport(result, oldFile, newFile, currentMode, onDone) {
+  const reportContent = `ChangeWatch AI Document Audit Report
 ======================================================
+Audit Domain Mode: ${currentMode.name}
 Base Document:     ${oldFile?.name || "Version 1"}
 Revised Document:  ${newFile?.name || "Version 2"}
 Generated on:      ${new Date().toLocaleString()}
-Total Differences: ${result.totalChanges || 0}
+Total Differences: ${result.totalChanges || (result.changes ? result.changes.length : 0)}
 
 EXECUTIVE AUDIT SUMMARY:
 ${result.summary}
@@ -262,14 +573,131 @@ Generated by ChangeWatch AI Engine • Powered by Groq LPU
 Architected by Shree Navaneetha V R
 `;
 
-    const blob = new Blob([reportContent], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `ChangeWatch_Audit_${Date.now()}.txt`;
-    link.click();
-    URL.revokeObjectURL(url);
-    showToast("Downloaded text audit report!");
+  const blob = new Blob([reportContent], { type: "text/plain" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  const fileSuffix = Math.floor(Math.random() * 1000000);
+  link.href = url;
+  link.download = `ChangeWatch_Audit_${fileSuffix}.txt`;
+  link.click();
+  URL.revokeObjectURL(url);
+  if (onDone) onDone();
+}
+
+export default function App() {
+  const [selectedModeId, setSelectedModeId] = useState("academic");
+  const [oldFile, setOldFile] = useState(null);
+  const [newFile, setNewFile] = useState(null);
+  const [isDraggingOld, setIsDraggingOld] = useState(false);
+  const [isDraggingNew, setIsDraggingNew] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
+  const [toastMessage, setToastMessage] = useState("");
+  const [openFaq, setOpenFaq] = useState(null);
+
+  const oldInputRef = useRef(null);
+  const newInputRef = useRef(null);
+  const resultsRef = useRef(null);
+
+  const currentMode = AUDIT_MODES.find((m) => m.id === selectedModeId) || AUDIT_MODES[0];
+
+  const showToast = (msg) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(""), 3500);
+  };
+
+  const handleCompare = async (e) => {
+    e.preventDefault();
+    if (!oldFile || !newFile) {
+      setError("Please upload both document versions before comparing.");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    setResult(null);
+
+    const formData = new FormData();
+    formData.append("oldDocument", oldFile);
+    formData.append("newDocument", newFile);
+    formData.append("auditMode", selectedModeId);
+
+    try {
+      const response = await fetch("https://changewatch.onrender.com/api/compare", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to compare documents.");
+      }
+      setResult(data);
+      setTimeout(() => {
+        resultsRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+    } catch (err) {
+      setError(err.message || "An unexpected error occurred while communicating with the server.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadSampleDemo = (modeToLoad = currentMode) => {
+    setError(null);
+    setOldFile({
+      name: modeToLoad.demoData.oldName,
+      size: 1420 * 1024,
+      isDemo: true
+    });
+    setNewFile({
+      name: modeToLoad.demoData.newName,
+      size: 1540 * 1024,
+      isDemo: true
+    });
+    setResult(modeToLoad.demoData);
+    showToast(`Loaded ${modeToLoad.name} Demo Data`);
+    setTimeout(() => {
+      resultsRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 150);
+  };
+
+  const handleModeChange = (modeId) => {
+    setSelectedModeId(modeId);
+    const targetMode = AUDIT_MODES.find((m) => m.id === modeId);
+    showToast(`Switched to ${targetMode?.name} Mode`);
+    if (result && oldFile?.isDemo) {
+      // If user is currently looking at demo data, refresh demo data for the new mode!
+      if (targetMode) loadSampleDemo(targetMode);
+    }
+  };
+
+  const copySummaryToClipboard = () => {
+    if (!result) return;
+    const summaryText = `ChangeWatch AI Document Audit Summary [${currentMode.name} Mode]:\n${result.summary}\n\nTotal Changes: ${result.totalChanges || 0}\n\nKey Action Items:\n${(result.actions || []).map((a, i) => `${i + 1}. ${a}`).join("\n")}`;
+    navigator.clipboard.writeText(summaryText);
+    showToast("Copied Audit Summary to clipboard!");
+  };
+
+  const triggerPdfDownload = () => {
+    if (!result) return;
+    executePdfExport(
+      result,
+      oldFile,
+      newFile,
+      currentMode,
+      () => showToast("Downloaded Official Branded PDF Audit Report!"),
+      () => {
+        showToast("Error generating PDF. Exporting text report instead.");
+        executeTextExport(result, oldFile, newFile, currentMode, () => showToast("Downloaded text audit report!"));
+      }
+    );
+  };
+
+  const triggerTextDownload = () => {
+    if (!result) return;
+    executeTextExport(result, oldFile, newFile, currentMode, () => showToast("Downloaded text audit report!"));
   };
 
   const resetAll = () => {
@@ -302,13 +730,21 @@ Architected by Shree Navaneetha V R
       {/* Navigation */}
       <header className="header">
         <div className="nav-inner">
-          <div className="brand">
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            className="brand"
+          >
             <div className="brand-badge">CW</div>
             <span className="brand-title">ChangeWatch</span>
             <span className="brand-tag">v2.0</span>
-          </div>
+          </a>
 
           <nav className="nav-links">
+            <a href="#workbench">Studio</a>
             <a href="#how-it-works">How It Works</a>
             <a href="#architecture">Architecture</a>
             <a href="#faq">FAQ</a>
@@ -316,7 +752,7 @@ Architected by Shree Navaneetha V R
           </nav>
 
           <div className="nav-actions">
-            <button onClick={loadSampleDemo} className="btn-demo-pill" type="button">
+            <button onClick={() => loadSampleDemo(currentMode)} className="btn-demo-pill" type="button">
               <SparkleIcon />
               <span>Try Demo</span>
             </button>
@@ -341,9 +777,9 @@ Architected by Shree Navaneetha V R
           </p>
 
           <div className="hero-quick-cta">
-            <button onClick={loadSampleDemo} className="btn-hero-sample">
+            <button onClick={() => loadSampleDemo(currentMode)} className="btn-hero-sample">
               <SparkleIcon />
-              <span>Instant Live Demo (Cutoff Round 1 vs Round 2)</span>
+              <span>Instant Live Demo ({currentMode.name})</span>
             </button>
           </div>
         </div>
@@ -358,7 +794,7 @@ Architected by Shree Navaneetha V R
             <div className="step-item">
               <div className="step-num">01</div>
               <h4>Upload Base & Revised Files</h4>
-              <p>Drag and drop your original document and the updated revision. Accepts PDF, Word (.docx), Excel, TXT, or scanned images.</p>
+              <p>Drag and drop your original document and updated revision. Accepts PDF, Word (.docx), Excel, TXT, or scanned images.</p>
             </div>
             <div className="step-item step-item-active">
               <div className="step-num">02</div>
@@ -367,14 +803,36 @@ Architected by Shree Navaneetha V R
             </div>
             <div className="step-item">
               <div className="step-num">03</div>
-              <h4>Audit Summary & Action Items</h4>
-              <p>Inspect exact previous vs revised values, critical vs standard alerts, and export or copy your audit report.</p>
+              <h4>Audit Summary & Branded PDF</h4>
+              <p>Inspect exact previous vs revised values, critical vs standard alerts, and export an official PDF audit report.</p>
             </div>
           </div>
         </section>
 
-        {/* Upload Card */}
+        {/* Upload Card / Workbench */}
         <div className="card glass-card" id="workbench">
+          {/* Domain Mode Selector */}
+          <div className="mode-selector-wrapper">
+            <div className="mode-selector-header">
+              <span className="mode-selector-label">SELECT AUDIT DOMAIN MODE</span>
+              <span className="mode-badge-pill">{currentMode.badge}</span>
+            </div>
+            <div className="mode-pills-grid">
+              {AUDIT_MODES.map((m) => (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() => handleModeChange(m.id)}
+                  className={`mode-pill-btn ${selectedModeId === m.id ? "active" : ""}`}
+                >
+                  <span className="mode-icon">{m.icon}</span>
+                  <span className="mode-text">{m.name}</span>
+                </button>
+              ))}
+            </div>
+            <p className="mode-tagline-text">{currentMode.tagline}</p>
+          </div>
+
           <form onSubmit={handleCompare}>
             <div className="upload-grid">
               {/* Document 1 */}
@@ -461,7 +919,7 @@ Architected by Shree Navaneetha V R
                     <button
                       type="button"
                       className="remove-btn"
-                      onClick={(e) => { e.stopPropagation(); setNewFile(null); }}
+                      onClick={(e) => { e.stopPropagation(); setOldFile(null); }}
                     >
                       <CloseIcon />
                     </button>
@@ -489,17 +947,17 @@ Architected by Shree Navaneetha V R
                     Analyzing Document Differences...
                   </>
                 ) : (
-                  "Compare Documents"
+                  `Compare in ${currentMode.name} Mode`
                 )}
               </button>
 
               <button
                 type="button"
-                onClick={loadSampleDemo}
+                onClick={() => loadSampleDemo(currentMode)}
                 className="btn-secondary"
               >
                 <SparkleIcon />
-                <span>Try Demo Sample</span>
+                <span>Try {currentMode.name} Demo</span>
               </button>
 
               {(oldFile || newFile || result) && (
@@ -511,7 +969,7 @@ Architected by Shree Navaneetha V R
 
             {loading && (
               <div className="cold-start-note">
-                <span>⚡ Running neural comparison via Groq LPU. (Note: On the first request, the Render server may take ~30s to wake up if dormant.)</span>
+                <span>⚡ Running neural comparison via Groq LPU in {currentMode.name} Mode. (Note: On the first request, the Render server may take ~30s to wake up if dormant.)</span>
               </div>
             )}
           </form>
@@ -530,23 +988,29 @@ Architected by Shree Navaneetha V R
           <div ref={resultsRef} className="results card">
             <div className="results-top">
               <div>
-                <div className="audit-badge-pill">AUDIT VERIFIED</div>
+                <div className="audit-badge-pill">
+                  AUDIT VERIFIED • {currentMode.name.toUpperCase()}
+                </div>
                 <h2>Audit Summary</h2>
                 <p className="results-summary">{result.summary}</p>
               </div>
               <div className="results-right-col">
                 <div className="metric-tag">
-                  <span className="metric-val">{result.totalChanges || 0}</span>
+                  <span className="metric-val">{result.totalChanges || (result.changes ? result.changes.length : 0)}</span>
                   <span className="metric-title">{result.totalChanges === 1 ? "Change" : "Changes"}</span>
                 </div>
                 <div className="result-action-btns">
+                  <button onClick={triggerPdfDownload} className="btn-icon-action btn-pdf-highlight" title="Download Official Branded PDF Report">
+                    <PdfDocIcon />
+                    <span>Download PDF Report</span>
+                  </button>
                   <button onClick={copySummaryToClipboard} className="btn-icon-action" title="Copy summary">
                     <CopyIcon />
                     <span>Copy</span>
                   </button>
-                  <button onClick={downloadReportFile} className="btn-icon-action" title="Download report text">
+                  <button onClick={triggerTextDownload} className="btn-icon-action" title="Download plain text file">
                     <DownloadIcon />
-                    <span>Export</span>
+                    <span>Text (.txt)</span>
                   </button>
                 </div>
               </div>
@@ -605,11 +1069,15 @@ Architected by Shree Navaneetha V R
             )}
 
             <div className="results-bottom-actions">
-              <button onClick={downloadReportFile} className="btn-primary">
-                <DownloadIcon />
-                <span>Download Full Audit Report (.txt)</span>
+              <button onClick={triggerPdfDownload} className="btn-primary btn-primary-pdf">
+                <PdfDocIcon />
+                <span>Download Official Branded PDF Report</span>
               </button>
-              <button onClick={resetAll} className="btn-secondary">
+              <button onClick={triggerTextDownload} className="btn-secondary">
+                <DownloadIcon />
+                <span>Download Plain Text (.txt)</span>
+              </button>
+              <button onClick={resetAll} className="btn-ghost">
                 Compare Another Document
               </button>
             </div>
@@ -709,8 +1177,12 @@ Architected by Shree Navaneetha V R
           <div className="faq-list">
             {[
               {
-                q: "How do I use ChangeWatch?",
-                a: "Simply upload your baseline file into Box 1 and your updated revision into Box 2, then click 'Compare Documents'. If you don't have files ready, click 'Try Demo' at the top to see an instant sample comparison!"
+                q: "How do Domain Modes work?",
+                a: "Domain Modes (Academic, Legal, Invoices, Policies) optimize the AI's semantic lens. For example, Legal Mode prioritizes liability caps and indemnity terms, while Academic Mode detects rank shifts and seat quota revisions."
+              },
+              {
+                q: "How do I download the Official PDF Audit Report?",
+                a: "Once your comparison is complete, click 'Download PDF Report'. ChangeWatch generates an official, high-resolution vector PDF certificate containing color-coded redline tables, risk meters, and checklist items."
               },
               {
                 q: "What file formats are supported?",
