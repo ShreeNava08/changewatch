@@ -315,6 +315,58 @@ const AUDIT_MODES = [
         "Verify all existing dependent enrollments are locked prior to renewal cutoff date."
       ]
     }
+  },
+  {
+    id: "general",
+    name: "General & Others",
+    icon: "🌐",
+    badge: "Universal Any-Document Diff",
+    tagline: "Universal comparison for any document type — research papers, technical specs, proposals, manuals, or general texts.",
+    demoData: {
+      oldName: "AI_Research_Specification_Draft_v1.0.pdf",
+      newName: "AI_Research_Specification_Final_v2.0.pdf",
+      summary: "Comprehensive multi-domain revisions detected across performance benchmarks, dataset sourcing, and methodology. Authors upgraded the accuracy benchmark from 89.2% to 94.6%, integrated 15,000 empirical open-source records, and added a specialized Groq LPU hardware latency analysis.",
+      totalChanges: 4,
+      changes: [
+        {
+          title: "Architecture & Benchmark Accuracy Evaluation",
+          type: "Metric Improvement",
+          importance: "important",
+          oldValue: "Baseline Evaluation: 89.2% Top-1 Accuracy across 10,000 validation samples.",
+          newValue: "Optimized Evaluation: 94.6% Top-1 Accuracy with 4-bit quantization on expanded 25,000 sample testbed.",
+          explanation: "Performance Upgrade: +5.4% accuracy improvement verified with low-bit model quantization."
+        },
+        {
+          title: "Hardware Inference Latency & Compute Benchmarks",
+          type: "Hardware Benchmark",
+          importance: "important",
+          oldValue: "Inference Latency: Unspecified runtime performance on generic cloud clusters.",
+          newValue: "Inference Latency: 14.2ms end-to-end latency on Groq LPU vs 86.5ms on legacy GPU architecture.",
+          explanation: "Hardware Acceleration: Demonstrates a 6.1x speedup when executing inference on specialized LPUs."
+        },
+        {
+          title: "Dataset Distribution & Sourcing Methodology",
+          type: "Methodology Shift",
+          importance: "standard",
+          oldValue: "Trained exclusively on synthetic benchmark datasets.",
+          newValue: "Trained on combined synthetic data and 15,000 peer-reviewed open-source research records.",
+          explanation: "Empirical Rigor: Replaces purely synthetic training with verified real-world training records."
+        },
+        {
+          title: "Reproducibility Appendix & Open Weights Checkpoint",
+          type: "Open Science Statement",
+          importance: "standard",
+          oldValue: "(Section omitted in initial working draft)",
+          newValue: "Added comprehensive reproducibility appendix with public GitHub checkpoint link and seed parameters.",
+          explanation: "Full Open Verification: Model weights and evaluation seed scripts are now publicly accessible."
+        }
+      ],
+      actions: [
+        "Cross-verify the 94.6% benchmark metric against the reproducibility appendix.",
+        "Inspect Section 4.3 for the updated Groq LPU latency comparison table.",
+        "Confirm citation formatting and repository links before final distribution."
+      ]
+    }
   }
 ];
 
