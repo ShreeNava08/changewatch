@@ -885,22 +885,19 @@ export default function App() {
               ))}
             </div>
 
-            {/* Dedicated "General & Others" Universal Button Below */}
+            {/* Dedicated "General & Others" Soft Pill Below */}
             {AUDIT_MODES[4] && (
-              <button
-                type="button"
-                onClick={() => handleModeChange(AUDIT_MODES[4].id)}
-                className={`mode-pill-btn mode-pill-general-wide mode-general ${selectedModeId === AUDIT_MODES[4].id ? "active" : ""}`}
-              >
-                <div className="general-left">
+              <div className="general-mode-wrapper">
+                <button
+                  type="button"
+                  onClick={() => handleModeChange(AUDIT_MODES[4].id)}
+                  className={`mode-pill-btn mode-pill-soft-general mode-general ${selectedModeId === AUDIT_MODES[4].id ? "active" : ""}`}
+                >
                   <span className="mode-icon-circle icon-bg-general">{AUDIT_MODES[4].icon}</span>
                   <span className="mode-text">{AUDIT_MODES[4].name}</span>
-                  <span className="universal-tag">UNIVERSAL ANY-FILE DIFF</span>
-                </div>
-                <span className="general-subtext">
-                  Compare any other document type — research papers, technical specs, proposals, manuals, or general texts
-                </span>
-              </button>
+                  <span className="soft-desc-pill">Universal File & Text Diff</span>
+                </button>
+              </div>
             )}
 
             <p className="mode-tagline-text">{currentMode.tagline}</p>

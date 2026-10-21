@@ -1421,48 +1421,53 @@
   box-shadow: 0 4px 18px rgba(16, 185, 129, 0.3);
 }
 
-/* 5. General & Others - Electric Rose Theme */
-.mode-pill-general-wide {
-  width: 100%;
-  box-sizing: border-box;
+/* 5. General & Others - Soft Minimal Pill Theme */
+.general-mode-wrapper {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.85rem 1.15rem;
+  justify-content: center;
+  margin-top: 0.25rem;
   margin-bottom: 0.85rem;
-  border-radius: 12px;
+}
+
+.mode-pill-soft-general {
+  border-radius: 30px;
+  padding: 0.55rem 1.25rem;
   background: rgba(255, 255, 255, 0.03);
-  border: 1px dashed rgba(244, 63, 94, 0.3);
-  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #cbd5e1;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  text-align: left;
+  cursor: pointer;
 }
+
 .icon-bg-general {
-  background: rgba(244, 63, 94, 0.15);
-  border: 1px solid rgba(244, 63, 94, 0.35);
+  background: rgba(129, 140, 248, 0.12);
+  border: 1px solid rgba(129, 140, 248, 0.25);
 }
-.mode-pill-general-wide:hover {
-  background: rgba(244, 63, 94, 0.06);
-  border-color: rgba(244, 63, 94, 0.6);
-  color: #ffe4e6;
+
+.mode-pill-soft-general:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(129, 140, 248, 0.4);
+  color: #ffffff;
   transform: translateY(-1px);
 }
-.mode-pill-general-wide.active {
-  background: linear-gradient(135deg, rgba(225, 29, 72, 0.25), rgba(244, 63, 94, 0.35));
-  border-style: solid;
-  border-color: #fb7185;
+
+.mode-pill-soft-general.active {
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.25), rgba(129, 140, 248, 0.35));
+  border-color: #818cf8;
   color: #ffffff;
-  box-shadow: 0 4px 18px rgba(244, 63, 94, 0.3);
+  box-shadow: 0 4px 18px rgba(99, 102, 241, 0.25);
 }
-.universal-tag {
-  font-size: 0.65rem;
-  font-weight: 800;
-  letter-spacing: 0.6px;
-  background: rgba(244, 63, 94, 0.2);
-  border: 1px solid rgba(244, 63, 94, 0.4);
-  color: #fda4af;
-  padding: 0.15rem 0.5rem;
-  border-radius: 12px;
+
+.soft-desc-pill {
+  font-size: 0.775rem;
+  color: #94a3b8;
+  font-weight: 500;
+  padding-left: 0.5rem;
+  border-left: 1px solid rgba(255, 255, 255, 0.12);
+  margin-left: 0.25rem;
 }
 
 /* Matching Badges */
@@ -1487,9 +1492,9 @@
   border: 1px solid rgba(52, 211, 153, 0.3);
 }
 .badge-general {
-  color: #fb7185;
-  background: rgba(251, 113, 133, 0.12);
-  border: 1px solid rgba(251, 113, 133, 0.3);
+  color: #a5b4fc;
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.3);
 }
 
 /* Matching Primary CTA Submit Buttons */
@@ -1526,11 +1531,11 @@
 }
 
 .btn-primary-general {
-  background: linear-gradient(135deg, #e11d48, #f43f5e);
-  box-shadow: 0 4px 14px rgba(244, 63, 94, 0.4);
+  background: linear-gradient(135deg, #4f46e5, #6366f1);
+  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4);
 }
 .btn-primary-general:hover {
-  background: linear-gradient(135deg, #be123c, #e11d48);
+  background: linear-gradient(135deg, #4338ca, #4f46e5);
 }
 
 .general-subtext {
@@ -1585,15 +1590,21 @@
   .mode-pills-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-  .mode-pill-general-wide {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.4rem;
-  }
 }
 
 @media (max-width: 550px) {
   .mode-pills-grid {
     grid-template-columns: 1fr;
+  }
+  .mode-pill-soft-general {
+    flex-direction: column;
+    text-align: center;
+    border-radius: 16px;
+    padding: 0.65rem 1rem;
+  }
+  .soft-desc-pill {
+    border-left: none;
+    padding-left: 0;
+    margin-left: 0;
   }
 }
