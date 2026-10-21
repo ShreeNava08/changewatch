@@ -1315,27 +1315,113 @@
   color: var(--text-sub);
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.65rem;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   text-align: left;
 }
 
-.mode-pill-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.2);
-  color: #fff;
+.mode-icon-circle {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.mode-pill-btn:hover .mode-icon-circle {
+  transform: scale(1.12);
+}
+
+/* 1. Academic Mode - Sky / Cyan Theme */
+.mode-academic {
+  border-color: rgba(56, 189, 248, 0.25);
+}
+.icon-bg-academic {
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+}
+.mode-academic:hover {
+  background: rgba(56, 189, 248, 0.08);
+  border-color: rgba(56, 189, 248, 0.5);
+  color: #e0f2fe;
   transform: translateY(-1px);
 }
-
-.mode-pill-btn.active {
-  background: linear-gradient(135deg, rgba(37, 99, 235, 0.25), rgba(99, 102, 241, 0.25));
-  border-color: #6366f1;
+.mode-academic.active {
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.25), rgba(56, 189, 248, 0.35));
+  border-color: #38bdf8;
   color: #ffffff;
-  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.25);
+  box-shadow: 0 4px 18px rgba(56, 189, 248, 0.3);
 }
 
-/* Dedicated Universal Full-Width Button Below */
+/* 2. Legal Mode - Royal Purple Theme */
+.mode-legal {
+  border-color: rgba(168, 85, 247, 0.25);
+}
+.icon-bg-legal {
+  background: rgba(168, 85, 247, 0.15);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+}
+.mode-legal:hover {
+  background: rgba(168, 85, 247, 0.08);
+  border-color: rgba(168, 85, 247, 0.5);
+  color: #f3e8ff;
+  transform: translateY(-1px);
+}
+.mode-legal.active {
+  background: linear-gradient(135deg, rgba(147, 51, 234, 0.25), rgba(168, 85, 247, 0.35));
+  border-color: #c084fc;
+  color: #ffffff;
+  box-shadow: 0 4px 18px rgba(168, 85, 247, 0.3);
+}
+
+/* 3. Finance & Invoices Mode - Amber / Gold Theme */
+.mode-finance {
+  border-color: rgba(245, 158, 11, 0.25);
+}
+.icon-bg-finance {
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+.mode-finance:hover {
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.5);
+  color: #fef3c7;
+  transform: translateY(-1px);
+}
+.mode-finance.active {
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.25), rgba(245, 158, 11, 0.35));
+  border-color: #fbbf24;
+  color: #ffffff;
+  box-shadow: 0 4px 18px rgba(245, 158, 11, 0.3);
+}
+
+/* 4. Policies & Insurance Mode - Emerald / Mint Theme */
+.mode-policy {
+  border-color: rgba(16, 185, 129, 0.25);
+}
+.icon-bg-policy {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+.mode-policy:hover {
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.5);
+  color: #d1fae5;
+  transform: translateY(-1px);
+}
+.mode-policy.active {
+  background: linear-gradient(135deg, rgba(5, 150, 105, 0.25), rgba(16, 185, 129, 0.35));
+  border-color: #34d399;
+  color: #ffffff;
+  box-shadow: 0 4px 18px rgba(16, 185, 129, 0.3);
+}
+
+/* 5. General & Others - Electric Rose Theme */
 .mode-pill-general-wide {
   width: 100%;
   box-sizing: border-box;
@@ -1346,42 +1432,105 @@
   margin-bottom: 0.85rem;
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.03);
-  border: 1px dashed rgba(255, 255, 255, 0.16);
+  border: 1px dashed rgba(244, 63, 94, 0.3);
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   text-align: left;
 }
-
+.icon-bg-general {
+  background: rgba(244, 63, 94, 0.15);
+  border: 1px solid rgba(244, 63, 94, 0.35);
+}
 .mode-pill-general-wide:hover {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(99, 102, 241, 0.45);
-  color: #fff;
+  background: rgba(244, 63, 94, 0.06);
+  border-color: rgba(244, 63, 94, 0.6);
+  color: #ffe4e6;
   transform: translateY(-1px);
 }
-
 .mode-pill-general-wide.active {
-  background: linear-gradient(135deg, rgba(37, 99, 235, 0.25), rgba(99, 102, 241, 0.3));
+  background: linear-gradient(135deg, rgba(225, 29, 72, 0.25), rgba(244, 63, 94, 0.35));
   border-style: solid;
-  border-color: #6366f1;
+  border-color: #fb7185;
   color: #ffffff;
-  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.25);
+  box-shadow: 0 4px 18px rgba(244, 63, 94, 0.3);
 }
-
-.general-left {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-}
-
 .universal-tag {
   font-size: 0.65rem;
   font-weight: 800;
   letter-spacing: 0.6px;
-  background: rgba(99, 102, 241, 0.2);
-  border: 1px solid rgba(99, 102, 241, 0.35);
-  color: #a5b4fc;
+  background: rgba(244, 63, 94, 0.2);
+  border: 1px solid rgba(244, 63, 94, 0.4);
+  color: #fda4af;
   padding: 0.15rem 0.5rem;
   border-radius: 12px;
+}
+
+/* Matching Badges */
+.badge-academic {
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+}
+.badge-legal {
+  color: #c084fc;
+  background: rgba(192, 132, 252, 0.12);
+  border: 1px solid rgba(192, 132, 252, 0.3);
+}
+.badge-finance {
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.12);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+}
+.badge-policy {
+  color: #34d399;
+  background: rgba(52, 211, 153, 0.12);
+  border: 1px solid rgba(52, 211, 153, 0.3);
+}
+.badge-general {
+  color: #fb7185;
+  background: rgba(251, 113, 133, 0.12);
+  border: 1px solid rgba(251, 113, 133, 0.3);
+}
+
+/* Matching Primary CTA Submit Buttons */
+.btn-primary-academic {
+  background: linear-gradient(135deg, #0284c7, #0ea5e9);
+  box-shadow: 0 4px 14px rgba(14, 165, 233, 0.4);
+}
+.btn-primary-academic:hover {
+  background: linear-gradient(135deg, #0369a1, #0284c7);
+}
+
+.btn-primary-legal {
+  background: linear-gradient(135deg, #7c3aed, #9333ea);
+  box-shadow: 0 4px 14px rgba(147, 51, 234, 0.4);
+}
+.btn-primary-legal:hover {
+  background: linear-gradient(135deg, #6d28d9, #7c3aed);
+}
+
+.btn-primary-finance {
+  background: linear-gradient(135deg, #d97706, #f59e0b);
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4);
+}
+.btn-primary-finance:hover {
+  background: linear-gradient(135deg, #b45309, #d97706);
+}
+
+.btn-primary-policy {
+  background: linear-gradient(135deg, #059669, #10b981);
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+}
+.btn-primary-policy:hover {
+  background: linear-gradient(135deg, #047857, #059669);
+}
+
+.btn-primary-general {
+  background: linear-gradient(135deg, #e11d48, #f43f5e);
+  box-shadow: 0 4px 14px rgba(244, 63, 94, 0.4);
+}
+.btn-primary-general:hover {
+  background: linear-gradient(135deg, #be123c, #e11d48);
 }
 
 .general-subtext {

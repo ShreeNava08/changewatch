@@ -867,7 +867,7 @@ export default function App() {
           <div className="mode-selector-wrapper">
             <div className="mode-selector-header">
               <span className="mode-selector-label">SELECT AUDIT DOMAIN MODE</span>
-              <span className="mode-badge-pill">{currentMode.badge}</span>
+              <span className={`mode-badge-pill badge-${selectedModeId}`}>{currentMode.badge}</span>
             </div>
 
             {/* Top 4 Primary Domain Categories */}
@@ -877,9 +877,9 @@ export default function App() {
                   key={m.id}
                   type="button"
                   onClick={() => handleModeChange(m.id)}
-                  className={`mode-pill-btn ${selectedModeId === m.id ? "active" : ""}`}
+                  className={`mode-pill-btn mode-${m.id} ${selectedModeId === m.id ? "active" : ""}`}
                 >
-                  <span className="mode-icon">{m.icon}</span>
+                  <span className={`mode-icon-circle icon-bg-${m.id}`}>{m.icon}</span>
                   <span className="mode-text">{m.name}</span>
                 </button>
               ))}
@@ -890,10 +890,10 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => handleModeChange(AUDIT_MODES[4].id)}
-                className={`mode-pill-btn mode-pill-general-wide ${selectedModeId === AUDIT_MODES[4].id ? "active" : ""}`}
+                className={`mode-pill-btn mode-pill-general-wide mode-general ${selectedModeId === AUDIT_MODES[4].id ? "active" : ""}`}
               >
                 <div className="general-left">
-                  <span className="mode-icon">{AUDIT_MODES[4].icon}</span>
+                  <span className="mode-icon-circle icon-bg-general">{AUDIT_MODES[4].icon}</span>
                   <span className="mode-text">{AUDIT_MODES[4].name}</span>
                   <span className="universal-tag">UNIVERSAL ANY-FILE DIFF</span>
                 </div>
@@ -1011,7 +1011,7 @@ export default function App() {
             <div className="btn-row">
               <button
                 type="submit"
-                className="btn-primary"
+                className={`btn-primary btn-primary-${selectedModeId}`}
                 disabled={loading || !oldFile || !newFile}
               >
                 {loading ? (
@@ -1061,7 +1061,7 @@ export default function App() {
           <div ref={resultsRef} className="results card">
             <div className="results-top">
               <div>
-                <div className="audit-badge-pill">
+                <div className={`audit-badge-pill badge-${selectedModeId}`}>
                   AUDIT VERIFIED • {currentMode.name.toUpperCase()}
                 </div>
                 <h2>Audit Summary</h2>
