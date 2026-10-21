@@ -869,8 +869,10 @@ export default function App() {
               <span className="mode-selector-label">SELECT AUDIT DOMAIN MODE</span>
               <span className="mode-badge-pill">{currentMode.badge}</span>
             </div>
+
+            {/* Top 4 Primary Domain Categories */}
             <div className="mode-pills-grid">
-              {AUDIT_MODES.map((m) => (
+              {AUDIT_MODES.slice(0, 4).map((m) => (
                 <button
                   key={m.id}
                   type="button"
@@ -882,6 +884,25 @@ export default function App() {
                 </button>
               ))}
             </div>
+
+            {/* Dedicated "General & Others" Universal Button Below */}
+            {AUDIT_MODES[4] && (
+              <button
+                type="button"
+                onClick={() => handleModeChange(AUDIT_MODES[4].id)}
+                className={`mode-pill-btn mode-pill-general-wide ${selectedModeId === AUDIT_MODES[4].id ? "active" : ""}`}
+              >
+                <div className="general-left">
+                  <span className="mode-icon">{AUDIT_MODES[4].icon}</span>
+                  <span className="mode-text">{AUDIT_MODES[4].name}</span>
+                  <span className="universal-tag">UNIVERSAL ANY-FILE DIFF</span>
+                </div>
+                <span className="general-subtext">
+                  Compare any other document type — research papers, technical specs, proposals, manuals, or general texts
+                </span>
+              </button>
+            )}
+
             <p className="mode-tagline-text">{currentMode.tagline}</p>
           </div>
 
