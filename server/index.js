@@ -218,6 +218,99 @@ ${newText.slice(0, 15000)}
   }
 );
 
+// Real-Time Neural Chat Route: Grounded Q&A on Diff Context
+app.post("/api/chat", async (req, res) => {
+  try {
+    const { message, diffContext, history } = req.body;
+    if (!message || !message.trim()) {
+      return res.status(400).json({ error: "Message is required." });
+    }
+
+    if (!process.env.GROQ_API_KEY) {
+      return res.status(500).json({ error: "GROQ_API_KEY is missing on server." });
+    }
+
+    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+
+    // Select active model
+    let activeModel = "llama-3.3-70b-versatile";
+    try {
+      const modelsList = await groq.models.list();
+      const chatModels = modelsList.data
+        .map((m) => m.id)
+        .filter((id) => !id.includes("whisper") && !id.includes("guard") && !id.includes("embed"));
+
+      activeModel =
+        chatModels.find(
+          (id) =>
+            id.includes("llama-3.3") ||
+            id.includes("llama-3.1-70b") ||
+            id.includes("llama-3.1-8b") ||
+            id.includes("llama") ||
+            id.includes("mixtral") ||
+            id.includes("qwen")
+        ) ||
+        chatModels[0] ||
+        "llama-3.3-70b-versatile";
+    } catch {
+      activeModel = "llama-3.3-70b-versatile";
+    }
+
+    const systemPrompt = `You are ChangeWatch Assistant, an AI document audit specialist built by Shree Navaneetha V R.
+You help users analyze and understand detected differences between two versions of a document.
+Always base your answers strictly on the audit context provided below.
+
+=== AUDIT CONTEXT ===
+Domain Mode: ${diffContext?.mode || "General"}
+Base Document: ${diffContext?.oldFileName || "Version 1"}
+Revised Document: ${diffContext?.newFileName || "Version 2"}
+Summary: ${diffContext?.summary || "No summary provided"}
+Total Changes: ${diffContext?.totalChanges || 0}
+Detected Discrepancies:
+${JSON.stringify(diffContext?.changes || [], null, 2)}
+Recommended Action Checklist:
+${JSON.stringify(diffContext?.actions || [], null, 2)}
+=== END AUDIT CONTEXT ===
+
+Instructions:
+- Provide direct, concise, and helpful answers formatted clearly with markdown bullet points or short paragraphs.
+- Clearly highlight Critical Priority items when asked about risks.
+- If asked to write an email, draft a professional and ready-to-send executive update.
+- If asked about fees, numbers, cutoffs, or deadlines, cite the exact old vs new numbers.
+- Maintain an authoritative, accurate, and professional tone.`;
+
+    const formattedHistory = Array.isArray(history)
+      ? history.slice(-6).map((item) => ({
+          role: item.role === "assistant" ? "assistant" : "user",
+          content: String(item.content || ""),
+        }))
+      : [];
+
+    const messages = [
+      { role: "system", content: systemPrompt },
+      ...formattedHistory,
+      { role: "user", content: message.trim() },
+    ];
+
+    const chatCompletion = await groq.chat.completions.create({
+      messages,
+      model: activeModel,
+      temperature: 0.3,
+      max_tokens: 1024,
+    });
+
+    const reply =
+      chatCompletion.choices[0]?.message?.content ||
+      "I couldn't generate a response based on the document diff.";
+    res.json({ reply });
+  } catch (error) {
+    console.error("CHAT ROUTE ERROR:", error);
+    res.status(500).json({
+      error: error.message || "Failed to process question with Groq AI.",
+    });
+  }
+});
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`ChangeWatch server running on port ${PORT}`);

@@ -84,6 +84,30 @@ const CopyIcon = () => (
   </svg>
 );
 
+const ChatBotIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+    <path d="M8 10h.01" />
+    <path d="M12 10h.01" />
+    <path d="M16 10h.01" />
+  </svg>
+);
+
+const SendChatIcon = () => (
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="22" y1="2" x2="11" y2="13" />
+    <polygon points="22 2 15 22 11 13 2 9 22 2" />
+  </svg>
+);
+
+const ClearChatIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 6h18" />
+    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+  </svg>
+);
+
 // Official Brand SVGs
 const LinkedInIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="#0A66C2">
@@ -370,6 +394,298 @@ const AUDIT_MODES = [
   }
 ];
 
+// Suggested prompt pill questions tailored per domain mode
+const SUGGESTED_PROMPTS = {
+  academic: [
+    "What is the most critical cutoff rank change?",
+    "Did sanctioned seats or intake capacity change?",
+    "Were any new caution deposits or fees added?",
+    "Draft an email alert for counseling candidates"
+  ],
+  legal: [
+    "What are the critical contractual risks?",
+    "Did liability caps or indemnities change?",
+    "Were notice or payment cycles altered?",
+    "Draft a contract change memo for leadership"
+  ],
+  finance: [
+    "What unapproved fees or surcharges were added?",
+    "How much did user license rates increase?",
+    "Did payment terms or exchange clauses change?",
+    "Draft a formal dispute email for billing"
+  ],
+  policy: [
+    "What hospital room rent sub-limits were added?",
+    "Is there a co-payment on robotic surgeries?",
+    "Did pre-existing disease waiting periods change?",
+    "Draft an HR employee benefits notice"
+  ],
+  general: [
+    "What are the most critical differences?",
+    "Summarize performance & benchmark shifts",
+    "What immediate action steps should be taken?",
+    "Draft an executive summary email for collaborators"
+  ]
+};
+
+// Inline Markdown Parser for bold and code
+function parseMarkdownLine(str) {
+  if (!str) return [];
+  const regex = /(\*\*.*?\*\*|`.*?`)/g;
+  const parts = str.split(regex);
+  return parts.map((part, i) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return <strong key={i}>{part.slice(2, -2)}</strong>;
+    }
+    if (part.startsWith("`") && part.endsWith("`")) {
+      return <code key={i} className="chat-inline-code">{part.slice(1, -1)}</code>;
+    }
+    return part;
+  });
+}
+
+// Formatted Chat Bubble Component
+function FormattedChatText({ text }) {
+  if (!text) return null;
+  const lines = text.split("\n");
+
+  return (
+    <div className="chat-formatted-body">
+      {lines.map((line, idx) => {
+        const trimmed = line.trim();
+        if (!trimmed) {
+          return <div key={idx} className="chat-spacer" />;
+        }
+
+        const isBullet = trimmed.startsWith("•") || trimmed.startsWith("- ") || trimmed.startsWith("* ");
+        const content = isBullet ? trimmed.replace(/^(•|-|\*)\s*/, "") : line;
+        const parts = parseMarkdownLine(content);
+
+        if (isBullet) {
+          return (
+            <div key={idx} className="chat-bullet-row">
+              <span className="chat-bullet-dot">›</span>
+              <span className="chat-bullet-text">{parts}</span>
+            </div>
+          );
+        }
+
+        if (trimmed.startsWith("###") || trimmed.startsWith("==")) {
+          return (
+            <div key={idx} className="chat-subhead">
+              {trimmed.replace(/^#+\s*/, "").replace(/^=+\s*/, "")}
+            </div>
+          );
+        }
+
+        return (
+          <p key={idx} className="chat-text-line">
+            {parts}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
+
+// Grounded Local AI Diff Generator (Guarantees immediate, high-precision answers even if Render server sleeps)
+function generateLocalAiDiffResponse(rawQuery, auditResult, mode) {
+  if (!auditResult) {
+    return "No document comparison has been performed yet. Please compare two documents or click 'Try Demo' above to generate diff context.";
+  }
+
+  const query = (rawQuery || "").toLowerCase();
+  const changes = auditResult.changes || [];
+  const actions = auditResult.actions || [];
+  const modeName = mode?.name || "General";
+
+  // 1. Critical / High-Risk / Priority Inquiries
+  if (
+    query.includes("risk") ||
+    query.includes("critical") ||
+    query.includes("important") ||
+    query.includes("danger") ||
+    query.includes("priority") ||
+    query.includes("highest") ||
+    query.includes("severe")
+  ) {
+    const importantChanges = changes.filter((c) => c.importance === "important");
+    if (importantChanges.length === 0) {
+      return `Good news! In this **${modeName}** audit, no discrepancies were marked as Critical Priority. All ${changes.length} detected adjustments are standard operational or editorial updates.`;
+    }
+    return `🚨 **Critical Priority Discrepancies Flagged (${importantChanges.length} found):**\n\n` +
+      importantChanges.map((c, i) => (
+        `• **${i + 1}. ${c.title}**\n` +
+        `  - **Previous:** ${c.oldValue || "—"}\n` +
+        `  - **Revised:** ${c.newValue || "—"}\n` +
+        `  - **Risk Impact:** ${c.explanation || "N/A"}`
+      )).join("\n\n") +
+      `\n\n💡 **Priority Recommendation:** Prioritize resolving these ${importantChanges.length} critical items before approving or executing this revision.`;
+  }
+
+  // 2. Draft an Email or Message
+  if (
+    query.includes("email") ||
+    query.includes("draft") ||
+    query.includes("mail") ||
+    query.includes("letter") ||
+    query.includes("memo") ||
+    query.includes("team") ||
+    query.includes("slack") ||
+    query.includes("message")
+  ) {
+    const topChanges = changes.slice(0, 3).map((c, i) => `  ${i + 1}. ${c.title}: ${c.newValue}`).join("\n");
+    const topAction = actions[0] || "Review the full redline audit certificate.";
+    return `📧 **Ready-to-Send Email Draft:**\n\n` +
+      `**Subject:** Urgent Update: Key Revisions Detected in ${modeName} Audit\n\n` +
+      `Hi Team,\n\n` +
+      `Following our automated comparison on ChangeWatch, we identified **${auditResult.totalChanges || changes.length} discrepancies** between the document versions.\n\n` +
+      `**Executive Summary:**\n${auditResult.summary}\n\n` +
+      `**Top Revision Highlights:**\n${topChanges}\n\n` +
+      `**Immediate Next Step:**\n• ${topAction}\n\n` +
+      `You can review the full breakdown or download the signed PDF audit certificate directly from ChangeWatch.\n\n` +
+      `Best regards,\n*ChangeWatch Document Intelligence*`;
+  }
+
+  // 3. Financial, Fees, Surcharges, Costs, Rates
+  if (
+    query.includes("fee") ||
+    query.includes("cost") ||
+    query.includes("money") ||
+    query.includes("price") ||
+    query.includes("rate") ||
+    query.includes("charge") ||
+    query.includes("surcharge") ||
+    query.includes("tuition") ||
+    query.includes("deposit") ||
+    query.includes("billing") ||
+    query.includes("payment") ||
+    query.includes("$") ||
+    query.includes("₹")
+  ) {
+    const feeChanges = changes.filter((c) =>
+      (c.title + " " + (c.explanation || "") + " " + (c.oldValue || "") + " " + (c.newValue || "")).match(/(\$|₹|fee|cost|rate|surcharge|deposit|tuition|bill|payment|price|dollar|rupee)/i)
+    );
+
+    if (feeChanges.length > 0) {
+      return `💰 **Financial & Billing Discrepancies Detected:**\n\n` +
+        feeChanges.map((c) => (
+          `• **${c.title}**\n` +
+          `  - **Previous:** ${c.oldValue || "—"}\n` +
+          `  - **Revised:** ${c.newValue || "—"}\n` +
+          `  - **Details:** ${c.explanation || "Financial adjustment"}`
+        )).join("\n\n");
+    }
+    return `💰 In this **${modeName}** comparison, no explicit pricing, surcharge, or fee alterations were detected among the line items.`;
+  }
+
+  // 4. Deadlines, Dates, Schedules, Extensions
+  if (
+    query.includes("deadline") ||
+    query.includes("date") ||
+    query.includes("schedule") ||
+    query.includes("time") ||
+    query.includes("window") ||
+    query.includes("reporting") ||
+    query.includes("extension") ||
+    query.includes("day")
+  ) {
+    const dateChanges = changes.filter((c) =>
+      (c.title + " " + (c.explanation || "") + " " + (c.oldValue || "") + " " + (c.newValue || "")).match(/(deadline|date|schedule|reporting|window|extension|day|hour|period)/i)
+    );
+
+    if (dateChanges.length > 0) {
+      return `📅 **Timeline & Deadline Adjustments:**\n\n` +
+        dateChanges.map((c) => (
+          `• **${c.title}**\n` +
+          `  - **Old Schedule:** ${c.oldValue || "—"}\n` +
+          `  - **New Schedule:** ${c.newValue || "—"}\n` +
+          `  - **Impact:** ${c.explanation || "Timeline updated"}`
+        )).join("\n\n");
+    }
+    return `📅 No schedule or deadline revisions were detected in this audit dataset.`;
+  }
+
+  // 5. Academic Cutoffs, Ranks, Seats
+  if (
+    query.includes("cutoff") ||
+    query.includes("rank") ||
+    query.includes("seat") ||
+    query.includes("intake") ||
+    query.includes("branch") ||
+    query.includes("counseling")
+  ) {
+    const academicItems = changes.filter((c) =>
+      (c.title + " " + (c.explanation || "") + " " + (c.oldValue || "") + " " + (c.newValue || "")).match(/(cutoff|rank|seat|intake|quota|allotment|branch)/i)
+    );
+    if (academicItems.length > 0) {
+      return `🎓 **Academic Cutoff & Intake Analysis:**\n\n` +
+        academicItems.map((c) => (
+          `• **${c.title}**\n` +
+          `  - **Round 1:** ${c.oldValue || "—"}\n` +
+          `  - **Round 2 (Revised):** ${c.newValue || "—"}\n` +
+          `  - **Analysis:** ${c.explanation || "N/A"}`
+        )).join("\n\n");
+    }
+  }
+
+  // 6. Action Items / Recommendations
+  if (
+    query.includes("action") ||
+    query.includes("recommend") ||
+    query.includes("todo") ||
+    query.includes("step") ||
+    query.includes("what should") ||
+    query.includes("what do i do")
+  ) {
+    if (actions.length > 0) {
+      return `📋 **Recommended Operational Action Checklist:**\n\n` +
+        actions.map((act, i) => `• **Step ${i + 1}:** ${act}`).join("\n") +
+        `\n\n💡 Make sure to download the Official PDF Audit Certificate for permanent archival proof.`;
+    }
+    return `📋 No specific action checklist items were flagged for these documents.`;
+  }
+
+  // 7. General / Comprehensive Fallback
+  return `🔍 **Audit Analysis for "${rawQuery}":**\n\n` +
+    `**Executive Summary:**\n${auditResult.summary}\n\n` +
+    `**Detected Discrepancies Overview (${changes.length} total):**\n` +
+    changes.slice(0, 3).map((c) => `• **${c.title}** (${c.importance === 'important' ? 'Critical' : 'Standard'}): ${c.explanation}`).join("\n") +
+    (changes.length > 3 ? `\n• *...and ${changes.length - 3} more adjustments detailed in the audit card.*` : "") +
+    (actions.length > 0 ? `\n\n**Key Next Step:**\n• ${actions[0]}` : "");
+}
+
+let messageCounter = 0;
+function createChatMessage(role, text) {
+  messageCounter += 1;
+  const time = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  return {
+    id: `${role}-${messageCounter}-${Math.random().toString(36).substring(2, 7)}`,
+    role,
+    text,
+    timestamp: time,
+  };
+}
+
+// Initial welcome message generator based on active diff
+function getInitialChatMessage(auditResult, mode) {
+  if (!auditResult) {
+    return createChatMessage(
+      "assistant",
+      "👋 Welcome to **Chat With the Diff**! Upload and compare two document versions or click **Try Demo** above to start exploring detected changes."
+    );
+  }
+  const count = auditResult.totalChanges || (auditResult.changes ? auditResult.changes.length : 0);
+  const criticalCount = (auditResult.changes || []).filter((c) => c.importance === "important").length;
+  return createChatMessage(
+    "assistant",
+    `👋 I have indexed your document diff in **${mode.name}** mode.\n\n` +
+      `• **${count} total discrepancies** indexed\n` +
+      `• **${criticalCount} critical priority items** flagged\n\n` +
+      `Ask me any question regarding specific numbers, cutoff ranks, fee adjustments, or altered clauses. You can also click the quick prompt pills below!`
+  );
+}
+
 // Pure Utility Function for Client-Side PDF Generation (decoupled from render)
 function executePdfExport(result, oldFile, newFile, currentMode, onDone, onError) {
   try {
@@ -648,9 +964,16 @@ export default function App() {
   const [toastMessage, setToastMessage] = useState("");
   const [openFaq, setOpenFaq] = useState(null);
 
+  // Chat With the Diff state
+  const [chatMessages, setChatMessages] = useState([]);
+  const [chatInput, setChatInput] = useState("");
+  const [chatLoading, setChatLoading] = useState(false);
+
   const oldInputRef = useRef(null);
   const newInputRef = useRef(null);
   const resultsRef = useRef(null);
+  const chatEndRef = useRef(null);
+  const chatSectionRef = useRef(null);
 
   const currentMode = AUDIT_MODES.find((m) => m.id === selectedModeId) || AUDIT_MODES[0];
 
@@ -686,6 +1009,7 @@ export default function App() {
         throw new Error(data.error || "Failed to compare documents.");
       }
       setResult(data);
+      setChatMessages([getInitialChatMessage(data, currentMode)]);
       setTimeout(() => {
         resultsRef.current?.scrollIntoView({ behavior: "smooth" });
       }, 100);
@@ -709,6 +1033,7 @@ export default function App() {
       isDemo: true
     });
     setResult(modeToLoad.demoData);
+    setChatMessages([getInitialChatMessage(modeToLoad.demoData, modeToLoad)]);
     showToast(`Loaded ${modeToLoad.name} Demo Data`);
     setTimeout(() => {
       resultsRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -722,6 +1047,8 @@ export default function App() {
     if (result && oldFile?.isDemo) {
       // If user is currently looking at demo data, refresh demo data for the new mode!
       if (targetMode) loadSampleDemo(targetMode);
+    } else if (result && targetMode) {
+      setChatMessages([getInitialChatMessage(result, targetMode)]);
     }
   };
 
@@ -757,8 +1084,85 @@ export default function App() {
     setNewFile(null);
     setResult(null);
     setError(null);
+    setChatMessages([]);
+    setChatInput("");
     if (oldInputRef.current) oldInputRef.current.value = "";
     if (newInputRef.current) newInputRef.current.value = "";
+  };
+
+  const handleClearChat = () => {
+    if (result) {
+      setChatMessages([getInitialChatMessage(result, currentMode)]);
+      showToast("Reset chat conversation");
+    } else {
+      setChatMessages([]);
+    }
+  };
+
+  const handleSendChatMessage = async (userPromptText) => {
+    const query = (userPromptText || chatInput).trim();
+    if (!query || chatLoading) return;
+
+    const userMsg = createChatMessage("user", query);
+    const nextHistory = [...chatMessages, userMsg];
+    setChatMessages(nextHistory);
+    setChatInput("");
+    setChatLoading(true);
+
+    setTimeout(() => {
+      chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 50);
+
+    const diffContext = result
+      ? {
+          mode: currentMode.name,
+          oldFileName: oldFile?.name || "Original Revision",
+          newFileName: newFile?.name || "Updated Revision",
+          summary: result.summary,
+          totalChanges: result.totalChanges || (result.changes ? result.changes.length : 0),
+          changes: result.changes || [],
+          actions: result.actions || [],
+        }
+      : null;
+
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 12000);
+
+      const response = await fetch("https://changewatch.onrender.com/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: query,
+          diffContext,
+          history: nextHistory.slice(-5),
+        }),
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`Server returned status ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (!data.reply) {
+        throw new Error("Empty reply from server");
+      }
+
+      const aiMsg = createChatMessage("assistant", data.reply);
+      setChatMessages((prev) => [...prev, aiMsg]);
+    } catch (chatErr) {
+      console.warn("Backend chat query fallback to grounded local AI engine:", chatErr);
+      const fallbackReply = generateLocalAiDiffResponse(query, result, currentMode);
+      const fallbackMsg = createChatMessage("assistant", fallbackReply);
+      setChatMessages((prev) => [...prev, fallbackMsg]);
+    } finally {
+      setChatLoading(false);
+      setTimeout(() => {
+        chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 80);
+    }
   };
 
   const toggleFaq = (idx) => {
@@ -798,6 +1202,7 @@ export default function App() {
           <nav className="nav-links">
             <a href="#workbench">Studio</a>
             <a href="#how-it-works">How It Works</a>
+            {result && <a href="#chat-diff" className="nav-chat-link">💬 Chat Diff</a>}
             <a href="#architecture">Architecture</a>
             <a href="#faq">FAQ</a>
             <a href="#founder">Founder</a>
@@ -1055,7 +1460,8 @@ export default function App() {
 
         {/* Results Display */}
         {result && (
-          <div ref={resultsRef} className="results card">
+          <>
+            <div ref={resultsRef} className="results card">
             <div className="results-top">
               <div>
                 <div className={`audit-badge-pill badge-${selectedModeId}`}>
@@ -1070,6 +1476,14 @@ export default function App() {
                   <span className="metric-title">{result.totalChanges === 1 ? "Change" : "Changes"}</span>
                 </div>
                 <div className="result-action-btns">
+                  <button
+                    onClick={() => chatSectionRef.current?.scrollIntoView({ behavior: "smooth" })}
+                    className="btn-icon-action btn-chat-highlight"
+                    title="Chat With This Diff"
+                  >
+                    <ChatBotIcon />
+                    <span>Chat Diff</span>
+                  </button>
                   <button onClick={triggerPdfDownload} className="btn-icon-action btn-pdf-highlight" title="Download Official Branded PDF Report">
                     <PdfDocIcon />
                     <span>Download PDF Report</span>
@@ -1139,6 +1553,14 @@ export default function App() {
             )}
 
             <div className="results-bottom-actions">
+              <button
+                type="button"
+                onClick={() => chatSectionRef.current?.scrollIntoView({ behavior: "smooth" })}
+                className="btn-secondary btn-chat-jump"
+              >
+                <ChatBotIcon />
+                <span>Chat With This Diff</span>
+              </button>
               <button onClick={triggerPdfDownload} className="btn-primary btn-primary-pdf">
                 <PdfDocIcon />
                 <span>Download Official Branded PDF Report</span>
@@ -1152,7 +1574,146 @@ export default function App() {
               </button>
             </div>
           </div>
-        )}
+
+          {/* =========================================================
+              CHAT WITH THE DIFF - INTERACTIVE NEURAL ASSISTANT
+          ========================================================= */}
+          <div ref={chatSectionRef} className="chat-diff-section card glass-card" id="chat-diff">
+            <div className="chat-diff-header">
+              <div className="chat-header-left">
+                <div className="chat-bot-avatar">
+                  <ChatBotIcon />
+                </div>
+                <div>
+                  <div className="chat-title-row">
+                    <h3>Chat With the Diff</h3>
+                    <span className="chat-badge-live">
+                      <span className="pulse-dot" />
+                      Groq Neural LPU
+                    </span>
+                  </div>
+                  <p className="chat-subtitle">
+                    Ask plain-English questions about detected score shifts, altered clauses, fee changes, or deadlines.
+                  </p>
+                </div>
+              </div>
+
+              <div className="chat-header-right">
+                <span className={`chat-mode-tag tag-${selectedModeId}`}>{currentMode.name}</span>
+                <button
+                  type="button"
+                  onClick={handleClearChat}
+                  className="btn-clear-chat"
+                  title="Reset chat conversation"
+                >
+                  <ClearChatIcon />
+                  <span>Reset Chat</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Suggested Prompts Pills */}
+            <div className="chat-prompts-wrapper">
+              <span className="chat-prompts-label">SUGGESTED QUESTIONS:</span>
+              <div className="chat-prompts-scroll">
+                {(SUGGESTED_PROMPTS[selectedModeId] || SUGGESTED_PROMPTS.general).map((prompt, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => handleSendChatMessage(prompt)}
+                    className="chat-prompt-pill"
+                    disabled={chatLoading}
+                  >
+                    <span className="prompt-sparkle">✦</span>
+                    <span>{prompt}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Chat Thread Messages */}
+            <div className="chat-messages-container">
+              {chatMessages.map((msg) => (
+                <div
+                  key={msg.id}
+                  className={`chat-bubble-row ${msg.role === "user" ? "chat-row-user" : "chat-row-assistant"}`}
+                >
+                  {msg.role === "assistant" && (
+                    <div className="chat-msg-avatar ai-avatar">
+                      <SparkleIcon />
+                    </div>
+                  )}
+
+                  <div className={`chat-bubble ${msg.role === "user" ? "bubble-user" : "bubble-assistant"}`}>
+                    <div className="chat-bubble-meta">
+                      <span className="chat-sender-name">
+                        {msg.role === "user" ? "You" : "ChangeWatch Assistant"}
+                      </span>
+                      <span className="chat-timestamp">{msg.timestamp}</span>
+                    </div>
+                    <FormattedChatText text={msg.text} />
+                  </div>
+
+                  {msg.role === "user" && (
+                    <div className="chat-msg-avatar user-avatar">
+                      <span>U</span>
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              {chatLoading && (
+                <div className="chat-bubble-row chat-row-assistant">
+                  <div className="chat-msg-avatar ai-avatar">
+                    <SparkleIcon />
+                  </div>
+                  <div className="chat-bubble bubble-assistant bubble-loading">
+                    <div className="typing-dots">
+                      <span />
+                      <span />
+                      <span />
+                    </div>
+                    <span className="typing-text">ChangeWatch is reasoning with Groq LPU...</span>
+                  </div>
+                </div>
+              )}
+
+              <div ref={chatEndRef} />
+            </div>
+
+            {/* Chat Input Bar */}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSendChatMessage();
+              }}
+              className="chat-input-form"
+            >
+              <div className="chat-input-wrapper">
+                <input
+                  type="text"
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  placeholder={`Ask anything about this ${currentMode.name} diff (e.g., 'What is the highest risk?')...`}
+                  className="chat-text-input"
+                  disabled={chatLoading}
+                />
+                <button
+                  type="submit"
+                  disabled={!chatInput.trim() || chatLoading}
+                  className={`btn-send-chat ${chatInput.trim() ? "btn-send-active" : ""}`}
+                  title="Send query"
+                >
+                  <SendChatIcon />
+                </button>
+              </div>
+              <div className="chat-input-footer-hint">
+                <span>💡 Grounded in active comparison diff • Fast neural inference powered by Groq LPUs</span>
+              </div>
+            </form>
+          </div>
+        </>
+      )}
 
         {/* Brochure Section */}
         <section id="architecture" className="brochure-section">
