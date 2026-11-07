@@ -25,6 +25,16 @@ app.get("/", (req, res) => {
   res.send("ChangeWatch backend is running!");
 });
 
+app.get("/api/health", (req, res) => {
+  res.json({
+    status: "ok",
+    service: "ChangeWatch AI Engine",
+    provider: "Groq LPU (LLaMA 3.3 70B)",
+    uptime: Math.round(process.uptime()),
+    timestamp: Date.now()
+  });
+});
+
 // Universal file extractor supporting PDF, Word, Excel, Plain Text, and Images
 async function extractTextFromFile(file) {
   const ext = path.extname(file.originalname).toLowerCase();

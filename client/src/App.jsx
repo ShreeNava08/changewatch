@@ -2,6 +2,8 @@ import { useState, useRef, useEffect, useMemo } from "react";
 import { jsPDF } from "jspdf";
 import "./App.css";
 
+const API_BASE_URL = "https://changewatch.onrender.com";
+
 // SVG UI Icons
 const UploadIcon = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1283,6 +1285,10 @@ export default function App() {
   const [toastMessage, setToastMessage] = useState("");
   const [openFaq, setOpenFaq] = useState(null);
 
+  // AI Engine Auto-Warmup & Live Status Probe
+  const [engineStatus, setEngineStatus] = useState("checking"); // "checking" | "online" | "warming" | "offline"
+  const [engineLatency, setEngineLatency] = useState(null);
+
   const currentMode = AUDIT_MODES.find((m) => m.id === selectedModeId) || AUDIT_MODES[0];
 
   // Chat With the Diff & Floating Assistant state (initialized with welcome message)
@@ -1447,6 +1453,66 @@ export default function App() {
     return () => clearTimeout(timer);
   }, []);
 
+  // Silent AI Engine Backend Auto-Warmup & Status Probe
+  useEffect(() => {
+    let isMounted = true;
+    let pollTimer = null;
+    let attemptCount = 0;
+
+    const probeBackend = async () => {
+      attemptCount++;
+      const startTime = performance.now();
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+        let res;
+        try {
+          res = await fetch(`${API_BASE_URL}/api/health`, {
+            method: "GET",
+            signal: controller.signal,
+          });
+        } catch {
+          res = await fetch(`${API_BASE_URL}/`, {
+            method: "GET",
+            signal: controller.signal,
+          });
+        }
+
+        clearTimeout(timeoutId);
+
+        if (res && res.ok) {
+          const latency = Math.round(performance.now() - startTime);
+          if (isMounted) {
+            setEngineStatus("online");
+            setEngineLatency(latency);
+          }
+          return; // Server is awake and ready
+        } else {
+          if (isMounted) setEngineStatus("warming");
+        }
+      } catch {
+        if (isMounted) {
+          setEngineStatus("warming");
+        }
+      }
+
+      // Retry every 4 seconds until awake (max 15 attempts = 60s)
+      if (isMounted && attemptCount < 15) {
+        pollTimer = setTimeout(probeBackend, 4000);
+      } else if (isMounted && attemptCount >= 15) {
+        setEngineStatus("offline");
+      }
+    };
+
+    probeBackend();
+
+    return () => {
+      isMounted = false;
+      if (pollTimer) clearTimeout(pollTimer);
+    };
+  }, []);
+
   const showToast = (msg) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(""), 3500);
@@ -1469,7 +1535,7 @@ export default function App() {
     formData.append("auditMode", selectedModeId);
 
     try {
-      const response = await fetch("https://changewatch.onrender.com/api/compare", {
+      const response = await fetch(`${API_BASE_URL}/api/compare`, {
         method: "POST",
         body: formData,
       });
@@ -1622,7 +1688,7 @@ export default function App() {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 12000);
 
-      const response = await fetch("https://changewatch.onrender.com/api/chat", {
+      const response = await fetch(`${API_BASE_URL}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -1718,9 +1784,46 @@ export default function App() {
               <SparkleIcon />
               <span>Try Demo</span>
             </button>
-            <div className="system-status">
-              <span className="pulse-dot" />
-              <span>Groq Neural LPU</span>
+            <div
+              className={`system-status-pill status-${engineStatus}`}
+              title={
+                engineStatus === "online"
+                  ? `Groq Neural LPU is active and ready (Latency: ${engineLatency ? `${engineLatency}ms` : "< 100ms"})`
+                  : engineStatus === "warming"
+                  ? "Render cloud container is currently waking up from sleep (~20s). Audits will run automatically."
+                  : engineStatus === "checking"
+                  ? "Probing Groq LPU inference engine availability..."
+                  : "AI Engine connection offline. Retrying..."
+              }
+            >
+              <span className={`status-indicator-dot ${engineStatus}`} />
+              <span className="status-label">
+                {engineStatus === "online" && (
+                  <>
+                    <span className="status-title">Groq LPU</span>
+                    <span className="status-state">Ready</span>
+                    {engineLatency && <span className="status-latency">{engineLatency}ms</span>}
+                  </>
+                )}
+                {engineStatus === "warming" && (
+                  <>
+                    <span className="status-title">AI Engine</span>
+                    <span className="status-state warming">Warming up...</span>
+                  </>
+                )}
+                {engineStatus === "checking" && (
+                  <>
+                    <span className="status-title">AI Engine</span>
+                    <span className="status-state checking">Connecting...</span>
+                  </>
+                )}
+                {engineStatus === "offline" && (
+                  <>
+                    <span className="status-title">AI Engine</span>
+                    <span className="status-state offline">Offline</span>
+                  </>
+                )}
+              </span>
             </div>
           </div>
         </div>
@@ -1971,9 +2074,20 @@ export default function App() {
               )}
             </div>
 
+            {engineStatus === "warming" && !loading && (
+              <div className="engine-warmup-banner">
+                <span className="warmup-spinner" />
+                <span>⚡ AI cloud engine is waking up in the background (~15s). Pick your documents and compare anytime!</span>
+              </div>
+            )}
+
             {loading && (
-              <div className="cold-start-note">
-                <span>⚡ Running neural comparison via Groq LPU in {currentMode.name} Mode. (Note: On the first request, the Render server may take ~30s to wake up if dormant.)</span>
+              <div className={`cold-start-note ${engineStatus === "online" ? "note-online" : "note-warming"}`}>
+                {engineStatus === "online" ? (
+                  <span>⚡ Groq Neural LPU is analyzing documents in {currentMode.name} Mode...</span>
+                ) : (
+                  <span>⚡ AI cloud engine is waking up from sleep (~15s)... Your comparison is queued and will execute automatically.</span>
+                )}
               </div>
             )}
           </form>
