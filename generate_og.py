@@ -284,16 +284,16 @@ draw.text(
 # ----------------- FOOTER BAR -----------------
 foot_y = 1120
 
-# Founder Tag (Professional Full Name + Alias as requested)
+# Founder Tag (Professional Full Name)
 draw.ellipse([(left_margin, foot_y + 4), (left_margin + 36, foot_y + 40)], fill=(37, 99, 235))
 draw.text((left_margin + 9, foot_y + 6), "✓", fill=(255, 255, 255), font=font_tag)
 
-founder_str = "Founder & Architect: Shree Navaneetha V R  (Shree Navaneeth)"
+founder_str = "Founder & Architect: Shree Navaneetha V R"
 draw.text((left_margin + 52, foot_y + 4), founder_str, fill=(248, 250, 252), font=font_footer_bold)
 
 # Middle Security Tag
 sec_str = "•  100% Stateless & In-Memory  •  Zero Data Retention  •"
-draw.text((left_margin + 980, foot_y + 6), sec_str, fill=(148, 163, 184), font=font_footer)
+draw.text((left_margin + 780, foot_y + 6), sec_str, fill=(148, 163, 184), font=font_footer)
 
 # Live Domain URL
 url_str = "changewatch-seven.vercel.app"
