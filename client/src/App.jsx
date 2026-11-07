@@ -1444,15 +1444,6 @@ export default function App() {
   const floatChatEndRef = useRef(null);
   const chatSectionRef = useRef(null);
 
-  // Auto pop out the AI Assistant chatbot 1.2s after the user opens the website
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsChatOpen(true);
-    }, 1200);
-
-    return () => clearTimeout(timer);
-  }, []);
-
   // Silent AI Engine Backend Auto-Warmup & Status Probe
   useEffect(() => {
     let isMounted = true;
