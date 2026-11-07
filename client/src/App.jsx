@@ -46,6 +46,20 @@ const FilterIcon = () => (
   </svg>
 );
 
+const HistoryIcon = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10" />
+    <polyline points="12 6 12 12 16 14" />
+  </svg>
+);
+
+const TrashIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="3 6 5 6 21 6" />
+    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+  </svg>
+);
+
 const CpuIcon = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <rect x="4" y="4" width="16" height="16" rx="2" />
@@ -1123,6 +1137,28 @@ function executeCsvExport(result, oldFile, newFile, currentMode, onDone) {
   if (onDone) onDone();
 }
 
+// Pure Helper to create a serializable history item
+function createHistoryAuditItem(auditData, oldFileName, newFileName, mode) {
+  return {
+    id: "audit_" + Date.now() + "_" + Math.floor(Math.random() * 10000),
+    timestamp: new Date().toLocaleString([], {
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
+    modeId: mode.id,
+    modeName: mode.name,
+    modeIcon: mode.icon,
+    oldFileName: oldFileName || "Version 1",
+    newFileName: newFileName || "Version 2",
+    summary: auditData.summary || "",
+    totalChanges: auditData.totalChanges || (auditData.changes ? auditData.changes.length : 0),
+    criticalCount: (auditData.changes || []).filter((c) => c.importance === "important").length,
+    result: auditData,
+  };
+}
+
 export default function App() {
   const [selectedModeId, setSelectedModeId] = useState("academic");
   const [oldFile, setOldFile] = useState(null);
@@ -1143,6 +1179,83 @@ export default function App() {
   const [chatLoading, setChatLoading] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [showSpeechBubble, setShowSpeechBubble] = useState(false);
+
+  // Recent Audits Local Storage History
+  const [auditHistory, setAuditHistory] = useState(() => {
+    try {
+      const saved = localStorage.getItem("changewatch_audit_history_v1");
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      console.error("Failed to load audit history from localStorage", e);
+      return [];
+    }
+  });
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+
+  const saveAuditToHistory = (auditData, oldFileName, newFileName, mode) => {
+    if (!auditData) return;
+    try {
+      const newItem = createHistoryAuditItem(auditData, oldFileName, newFileName, mode);
+
+      setAuditHistory((prev) => {
+        const filtered = prev.filter(
+          (item) =>
+            !(
+              item.oldFileName === newItem.oldFileName &&
+              item.newFileName === newItem.newFileName &&
+              item.modeId === newItem.modeId
+            )
+        );
+        const updated = [newItem, ...filtered].slice(0, 6);
+        localStorage.setItem("changewatch_audit_history_v1", JSON.stringify(updated));
+        return updated;
+      });
+    } catch (err) {
+      console.error("Failed to save audit history", err);
+    }
+  };
+
+  const restoreAuditFromHistory = (item) => {
+    setSelectedModeId(item.modeId);
+    const targetMode = AUDIT_MODES.find((m) => m.id === item.modeId) || currentMode;
+    setOldFile({
+      name: item.oldFileName,
+      size: 1400 * 1024,
+      isRestored: true,
+    });
+    setNewFile({
+      name: item.newFileName,
+      size: 1500 * 1024,
+      isRestored: true,
+    });
+    setResult(item.result);
+    setSearchQuery("");
+    setSeverityFilter("all");
+    setCategoryFilter("all");
+    setSortBy("default");
+    setChatMessages([getInitialChatMessage(item.result, targetMode)]);
+    setIsHistoryOpen(false);
+    showToast(`Restored audit: ${item.oldFileName} vs ${item.newFileName}`);
+    setTimeout(() => {
+      resultsRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 100);
+  };
+
+  const deleteAuditFromHistory = (id, e) => {
+    if (e) e.stopPropagation();
+    setAuditHistory((prev) => {
+      const updated = prev.filter((item) => item.id !== id);
+      localStorage.setItem("changewatch_audit_history_v1", JSON.stringify(updated));
+      return updated;
+    });
+    showToast("Removed audit from history");
+  };
+
+  const clearAllHistory = () => {
+    setAuditHistory([]);
+    localStorage.removeItem("changewatch_audit_history_v1");
+    showToast("Cleared all audit history");
+  };
 
   // Discrepancy Search, Filtering & Sorting State
   const [searchQuery, setSearchQuery] = useState("");
@@ -1253,6 +1366,7 @@ export default function App() {
         throw new Error(data.error || "Failed to compare documents.");
       }
       setResult(data);
+      saveAuditToHistory(data, oldFile.name, newFile.name, currentMode);
       setSearchQuery("");
       setSeverityFilter("all");
       setCategoryFilter("all");
@@ -1281,6 +1395,7 @@ export default function App() {
       isDemo: true
     });
     setResult(modeToLoad.demoData);
+    saveAuditToHistory(modeToLoad.demoData, modeToLoad.demoData.oldName, modeToLoad.demoData.newName, modeToLoad);
     setSearchQuery("");
     setSeverityFilter("all");
     setCategoryFilter("all");
@@ -1475,6 +1590,16 @@ export default function App() {
           </nav>
 
           <div className="nav-actions">
+            <button
+              onClick={() => setIsHistoryOpen(true)}
+              className="btn-history-pill"
+              type="button"
+              title="View Recent Document Audits"
+            >
+              <HistoryIcon />
+              <span>History</span>
+              {auditHistory.length > 0 && <span className="history-count-badge">{auditHistory.length}</span>}
+            </button>
             <button onClick={() => loadSampleDemo(currentMode)} className="btn-demo-pill" type="button">
               <SparkleIcon />
               <span>Try Demo</span>
@@ -1757,6 +1882,10 @@ export default function App() {
                   <button onClick={triggerCsvDownload} className="btn-icon-action btn-csv-highlight" title="Export Discrepancies to Excel / CSV Spreadsheet">
                     <ExcelIcon />
                     <span>Excel / CSV</span>
+                  </button>
+                  <button onClick={() => setIsHistoryOpen(true)} className="btn-icon-action btn-history-action" title="View Recent Audit Logs">
+                    <HistoryIcon />
+                    <span>Audits {auditHistory.length > 0 && `(${auditHistory.length})`}</span>
                   </button>
                   <button onClick={copySummaryToClipboard} className="btn-icon-action" title="Copy summary">
                     <CopyIcon />
@@ -2502,7 +2631,7 @@ export default function App() {
               {chatLoading && (
                 <div className="float-msg-row float-ai-row">
                   <div className="float-msg-avatar-small ai-small">
-                    <SparkleIcon />
+                    <ChatBotIcon size={14} />
                   </div>
                   <div className="float-msg-bubble bubble-assistant bubble-loading">
                     <div className="typing-dots">
@@ -2551,6 +2680,143 @@ export default function App() {
           </div>
         )}
       </aside>
+
+      {/* =========================================================
+          RECENT AUDITS HISTORY DRAWER (SLIDE-OVER PANEL)
+      ========================================================= */}
+      {isHistoryOpen && (
+        <div className="history-modal-overlay" onClick={() => setIsHistoryOpen(false)}>
+          <div className="history-drawer animate-slide-left" onClick={(e) => e.stopPropagation()}>
+            {/* Drawer Header */}
+            <div className="history-drawer-header">
+              <div className="history-title-row">
+                <div className="history-header-icon">
+                  <HistoryIcon />
+                </div>
+                <div>
+                  <h3>Recent Audits</h3>
+                  <span className="history-subtitle">Saved locally on your device</span>
+                </div>
+              </div>
+
+              <div className="history-header-actions">
+                {auditHistory.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={clearAllHistory}
+                    className="btn-history-clear"
+                    title="Clear audit history"
+                  >
+                    <TrashIcon />
+                    <span>Clear All</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setIsHistoryOpen(false)}
+                  className="btn-history-close"
+                  title="Close History"
+                >
+                  <CloseIcon />
+                </button>
+              </div>
+            </div>
+
+            {/* History List Stream */}
+            <div className="history-drawer-body">
+              {auditHistory.length > 0 ? (
+                <div className="history-items-list">
+                  {auditHistory.map((item) => (
+                    <div
+                      key={item.id}
+                      className="history-card"
+                      onClick={() => restoreAuditFromHistory(item)}
+                    >
+                      <div className="history-card-top">
+                        <div className="history-card-mode">
+                          <span className="history-mode-icon">{item.modeIcon || "📄"}</span>
+                          <span className={`history-mode-name badge-${item.modeId}`}>{item.modeName}</span>
+                        </div>
+                        <span className="history-timestamp">{item.timestamp}</span>
+                      </div>
+
+                      <div className="history-card-files">
+                        <div className="history-file-row">
+                          <span className="file-tag-prev">V1</span>
+                          <span className="history-file-name" title={item.oldFileName}>{item.oldFileName}</span>
+                        </div>
+                        <div className="history-file-arrow">↓</div>
+                        <div className="history-file-row">
+                          <span className="file-tag-next">V2</span>
+                          <span className="history-file-name" title={item.newFileName}>{item.newFileName}</span>
+                        </div>
+                      </div>
+
+                      <p className="history-summary-snippet">
+                        {item.summary ? item.summary.slice(0, 115) + (item.summary.length > 115 ? "..." : "") : "Audit discrepancies detected."}
+                      </p>
+
+                      <div className="history-card-footer">
+                        <div className="history-metrics">
+                          <span className="history-metric-chip total-chip">
+                            {item.totalChanges} {item.totalChanges === 1 ? "Change" : "Changes"}
+                          </span>
+                          {item.criticalCount > 0 && (
+                            <span className="history-metric-chip critical-chip">
+                              {item.criticalCount} Critical
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="history-card-btns">
+                          <button
+                            type="button"
+                            className="btn-delete-history-item"
+                            onClick={(e) => deleteAuditFromHistory(item.id, e)}
+                            title="Remove from history"
+                          >
+                            <TrashIcon />
+                          </button>
+                          <button
+                            type="button"
+                            className="btn-restore-audit"
+                            onClick={() => restoreAuditFromHistory(item)}
+                          >
+                            <span>Restore</span>
+                            <span className="restore-arrow">→</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="history-empty-state">
+                  <div className="history-empty-icon">🕒</div>
+                  <h4>No Saved Audits Yet</h4>
+                  <p>When you compare documents or run a live demo, your audit history will appear here for fast 1-click restore.</p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsHistoryOpen(false);
+                      loadSampleDemo(currentMode);
+                    }}
+                    className="btn-primary btn-load-demo-history"
+                  >
+                    <SparkleIcon />
+                    <span>Run Instant Demo</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Drawer Footer */}
+            <div className="history-drawer-footer">
+              <span>ChangeWatch Local Audit Cache • Zero Cloud Storage</span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
