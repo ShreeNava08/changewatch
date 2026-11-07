@@ -90,6 +90,16 @@ const PdfDocIcon = () => (
   </svg>
 );
 
+const ExcelIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+    <polyline points="14 2 14 8 20 8" />
+    <path d="M8 13h8" />
+    <path d="M8 17h8" />
+    <path d="M10 9h4" />
+  </svg>
+);
+
 const CopyIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
@@ -1043,6 +1053,76 @@ Architected by Shree Navaneetha V R
   if (onDone) onDone();
 }
 
+// Pure Utility Function for Excel / CSV Spreadsheet Export
+function executeCsvExport(result, oldFile, newFile, currentMode, onDone) {
+  const sanitize = (val) => {
+    if (val === null || val === undefined) return '""';
+    const str = String(val).replace(/"/g, '""');
+    return `"${str}"`;
+  };
+
+  const lines = [];
+
+  // Metadata Header Block
+  lines.push("ChangeWatch AI Document Audit Discrepancy Sheet");
+  lines.push(`Audit Mode,${sanitize(currentMode.name)}`);
+  lines.push(`Base Document,${sanitize(oldFile?.name || "Version 1")}`);
+  lines.push(`Revised Document,${sanitize(newFile?.name || "Version 2")}`);
+  lines.push(`Generated On,${sanitize(new Date().toLocaleString())}`);
+  lines.push(`Total Discrepancies Flagged,${result.totalChanges || (result.changes ? result.changes.length : 0)}`);
+  lines.push(`Executive Summary,${sanitize(result.summary || "")}`);
+  lines.push("");
+
+  // Table Headers
+  lines.push([
+    "Item #",
+    "Discrepancy Title / Clause",
+    "Priority Level",
+    "Category / Type",
+    "Previous Version Value",
+    "Revised Version Value",
+    "Impact Analysis & Explanation"
+  ].join(","));
+
+  // Discrepancy Data Rows
+  (result.changes || []).forEach((c, idx) => {
+    lines.push([
+      idx + 1,
+      sanitize(c.title || ""),
+      sanitize(c.importance === "important" ? "Critical Priority" : "Standard"),
+      sanitize(c.type || "General"),
+      sanitize(c.oldValue || "—"),
+      sanitize(c.newValue || "—"),
+      sanitize(c.explanation || "")
+    ].join(","));
+  });
+
+  // Recommended Action Checklist
+  if (result.actions && result.actions.length > 0) {
+    lines.push("");
+    lines.push("RECOMMENDED ACTION CHECKLIST");
+    lines.push("Step #,Action Description");
+    result.actions.forEach((act, idx) => {
+      lines.push(`${idx + 1},${sanitize(act)}`);
+    });
+  }
+
+  lines.push("");
+  lines.push("Verified by ChangeWatch AI • Powered by Groq LPU • Architected by Shree Navaneetha V R");
+
+  // UTF-8 Byte Order Mark (\uFEFF) ensures Excel opens special characters (₹, →, accents) properly
+  const csvContent = "\uFEFF" + lines.join("\r\n");
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  const fileSuffix = Math.floor(Math.random() * 1000000);
+  link.href = url;
+  link.download = `ChangeWatch_Discrepancies_${fileSuffix}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
+  if (onDone) onDone();
+}
+
 export default function App() {
   const [selectedModeId, setSelectedModeId] = useState("academic");
   const [oldFile, setOldFile] = useState(null);
@@ -1249,6 +1329,13 @@ export default function App() {
   const triggerTextDownload = () => {
     if (!result) return;
     executeTextExport(result, oldFile, newFile, currentMode, () => showToast("Downloaded text audit report!"));
+  };
+
+  const triggerCsvDownload = () => {
+    if (!result) return;
+    executeCsvExport(result, oldFile, newFile, currentMode, () =>
+      showToast("Downloaded Excel / CSV Discrepancy Sheet!")
+    );
   };
 
   const resetAll = () => {
@@ -1667,6 +1754,10 @@ export default function App() {
                     <PdfDocIcon />
                     <span>Download PDF Report</span>
                   </button>
+                  <button onClick={triggerCsvDownload} className="btn-icon-action btn-csv-highlight" title="Export Discrepancies to Excel / CSV Spreadsheet">
+                    <ExcelIcon />
+                    <span>Excel / CSV</span>
+                  </button>
                   <button onClick={copySummaryToClipboard} className="btn-icon-action" title="Copy summary">
                     <CopyIcon />
                     <span>Copy</span>
@@ -1884,6 +1975,10 @@ export default function App() {
               <button onClick={triggerPdfDownload} className="btn-primary btn-primary-pdf">
                 <PdfDocIcon />
                 <span>Download Official Branded PDF Report</span>
+              </button>
+              <button onClick={triggerCsvDownload} className="btn-primary btn-primary-csv">
+                <ExcelIcon />
+                <span>Export Excel / CSV Sheet</span>
               </button>
               <button onClick={triggerTextDownload} className="btn-secondary">
                 <DownloadIcon />
