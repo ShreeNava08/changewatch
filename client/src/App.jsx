@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { jsPDF } from "jspdf";
 import "./App.css";
 
@@ -105,6 +105,21 @@ const ClearChatIcon = () => (
     <path d="M3 6h18" />
     <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
     <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+  </svg>
+);
+
+const RefreshIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 2v6h-6" />
+    <path d="M3 12a9 9 0 0 1 15-6.7L21 8" />
+    <path d="M3 22v-6h6" />
+    <path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
+  </svg>
+);
+
+const MinimizeIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="5" y1="12" x2="19" y2="12" />
   </svg>
 );
 
@@ -428,6 +443,15 @@ const SUGGESTED_PROMPTS = {
   ]
 };
 
+// Initial Onboarding suggestions when no diff is loaded yet
+const ONBOARDING_PROMPTS = [
+  "⚡ Run Instant Live Demo",
+  "🔍 How does ChangeWatch work?",
+  "📄 What file formats can I compare?",
+  "🎓 Explain Domain Modes",
+  "👨‍💻 Who built ChangeWatch?"
+];
+
 // Inline Markdown Parser for bold and code
 function parseMarkdownLine(str) {
   if (!str) return [];
@@ -490,11 +514,47 @@ function FormattedChatText({ text }) {
 
 // Grounded Local AI Diff Generator (Guarantees immediate, high-precision answers even if Render server sleeps)
 function generateLocalAiDiffResponse(rawQuery, auditResult, mode) {
+  const query = (rawQuery || "").toLowerCase();
+
+  // If no document comparison has been run yet, act as a friendly guide & assistant
   if (!auditResult) {
-    return "No document comparison has been performed yet. Please compare two documents or click 'Try Demo' above to generate diff context.";
+    if (query.includes("demo") || query.includes("test") || query.includes("sample") || query.includes("run")) {
+      return "⚡ I have loaded the **Academic & Cutoffs Live Demo** for you on the workbench!\n\n" +
+        "You can inspect the 4 detected discrepancies below, including the +440 rank cutoff relaxation, doubled intake capacity, and caution deposit schedule. Ask me any question about these numbers!";
+    }
+    if (query.includes("how") || query.includes("work") || query.includes("use") || query.includes("guide") || query.includes("step")) {
+      return "💡 **How ChangeWatch Works in 3 Simple Steps:**\n\n" +
+        "• **1. Select Domain Mode**: Academic & Cutoffs, Legal & Contracts, Invoices & Quotations, Policies & Insurance, or General & Others.\n" +
+        "• **2. Upload Base & Revised Files**: Drag and drop two versions (PDF, Word, Excel, scanned image, or TXT).\n" +
+        "• **3. Neural Discrepancy Audit**: Embedded OCR parses scans and tables, while Groq LPUs pinpoint score updates, altered clauses, and numerical differences.\n\n" +
+        "Click **'⚡ Run Instant Live Demo'** to see it in action!";
+    }
+    if (query.includes("file") || query.includes("format") || query.includes("type") || query.includes("pdf") || query.includes("word") || query.includes("excel") || query.includes("image") || query.includes("ocr")) {
+      return "📄 **Universal File Format Support:**\n\n" +
+        "• **PDF Documents** (`.pdf`) — Full vector & layout text extraction\n" +
+        "• **Microsoft Word** (`.docx`) — Structure & clause comparison\n" +
+        "• **Excel & Spreadsheets** (`.xlsx`, `.xls`, `.csv`) — Cell-by-cell tabular diff\n" +
+        "• **Scanned Images & Marksheets** (`.png`, `.jpg`, `.jpeg`, `.webp`) — High-precision optical character recognition (OCR)\n" +
+        "• **Plain Text & Markdown** (`.txt`, `.md`, `.rtf`, `.json`)";
+    }
+    if (query.includes("mode") || query.includes("academic") || query.includes("legal") || query.includes("invoice") || query.includes("policy") || query.includes("general")) {
+      return "🎓 **5 Domain-Optimized Audit Modes:**\n\n" +
+        "• **🎓 Academic & Cutoffs**: Detects rank shifts, seat quota expansions, caution deposit additions, and counseling deadlines.\n" +
+        "• **⚖️ Legal & Contracts**: Highlights liability sub-limits, indemnity alterations, and termination clauses.\n" +
+        "• **💰 Invoices & Quotations**: Spots unapproved fee surcharges, license rate hikes, and billing terms.\n" +
+        "• **🛡️ Policies & Insurance**: Flags room rent caps, co-payments on modern surgeries, and waiting periods.\n" +
+        "• **🌐 General & Others**: Universal comparison for research papers, specifications, and arbitrary text.";
+    }
+    if (query.includes("founder") || query.includes("creator") || query.includes("who built") || query.includes("author") || query.includes("shree")) {
+      return "👨‍💻 **Founder & Architect:**\n\nChangeWatch was designed, architected, and engineered from scratch by **Shree Navaneetha V R** (1st Year B.E. in Computer Science & Engineering) as an independent full-stack AI project.";
+    }
+    return "👋 Welcome to **ChangeWatch AI Assistant**!\n\n" +
+      "I can guide you through comparing document revisions, explain detected changes, or load an instant demo. Try asking:\n" +
+      "• *'How does ChangeWatch work?'*\n" +
+      "• *'What files can I upload?'*\n" +
+      "• Or click **'⚡ Run Instant Live Demo'** to see a full audit right now!";
   }
 
-  const query = (rawQuery || "").toLowerCase();
   const changes = auditResult.changes || [];
   const actions = auditResult.actions || [];
   const modeName = mode?.name || "General";
@@ -672,7 +732,9 @@ function getInitialChatMessage(auditResult, mode) {
   if (!auditResult) {
     return createChatMessage(
       "assistant",
-      "👋 Welcome to **Chat With the Diff**! Upload and compare two document versions or click **Try Demo** above to start exploring detected changes."
+      "👋 Hi there! I'm your **ChangeWatch AI Assistant**.\n\n" +
+        "I'm here to help you audit document changes, explain our multi-modal OCR extraction, or load a live demo for you right now.\n\n" +
+        "What would you like to explore? Click any suggestion below or ask me a question!"
     );
   }
   const count = auditResult.totalChanges || (auditResult.changes ? auditResult.changes.length : 0);
@@ -964,18 +1026,30 @@ export default function App() {
   const [toastMessage, setToastMessage] = useState("");
   const [openFaq, setOpenFaq] = useState(null);
 
-  // Chat With the Diff state
-  const [chatMessages, setChatMessages] = useState([]);
+  const currentMode = AUDIT_MODES.find((m) => m.id === selectedModeId) || AUDIT_MODES[0];
+
+  // Chat With the Diff & Floating Assistant state (initialized with welcome message)
+  const [chatMessages, setChatMessages] = useState(() => [getInitialChatMessage(null, AUDIT_MODES[0])]);
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [showSpeechBubble, setShowSpeechBubble] = useState(false);
 
   const oldInputRef = useRef(null);
   const newInputRef = useRef(null);
   const resultsRef = useRef(null);
   const chatEndRef = useRef(null);
+  const floatChatEndRef = useRef(null);
   const chatSectionRef = useRef(null);
 
-  const currentMode = AUDIT_MODES.find((m) => m.id === selectedModeId) || AUDIT_MODES[0];
+  // Auto pop out the AI Assistant chatbot 1.2s after the user opens the website
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsChatOpen(true);
+    }, 1200);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const showToast = (msg) => {
     setToastMessage(msg);
@@ -1091,17 +1165,18 @@ export default function App() {
   };
 
   const handleClearChat = () => {
-    if (result) {
-      setChatMessages([getInitialChatMessage(result, currentMode)]);
-      showToast("Reset chat conversation");
-    } else {
-      setChatMessages([]);
-    }
+    setChatMessages([getInitialChatMessage(result, currentMode)]);
+    showToast("Reset chat conversation");
   };
 
   const handleSendChatMessage = async (userPromptText) => {
     const query = (userPromptText || chatInput).trim();
     if (!query || chatLoading) return;
+
+    // Trigger demo if requested via chat
+    if (query.includes("Run Instant Live Demo") || (!result && (query.toLowerCase().includes("demo") || query.toLowerCase().includes("sample")))) {
+      loadSampleDemo(currentMode);
+    }
 
     const userMsg = createChatMessage("user", query);
     const nextHistory = [...chatMessages, userMsg];
@@ -1111,6 +1186,7 @@ export default function App() {
 
     setTimeout(() => {
       chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      floatChatEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, 50);
 
     const diffContext = result
@@ -1161,6 +1237,7 @@ export default function App() {
       setChatLoading(false);
       setTimeout(() => {
         chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        floatChatEndRef.current?.scrollIntoView({ behavior: "smooth" });
       }, 80);
     }
   };
@@ -1934,6 +2011,208 @@ export default function App() {
           </div>
         </div>
       </footer>
+
+      {/* =========================================================
+          FLOATING AI ASSISTANT CHATBOT (POPS OUT ON OPEN)
+      ========================================================= */}
+      <aside className="floating-assistant-wrapper" aria-label="ChangeWatch AI Assistant">
+        {/* Launcher Button & Greeting Speech Bubble */}
+        {!isChatOpen && (
+          <div className="assistant-launcher-container">
+            {showSpeechBubble && (
+              <div
+                className="assistant-speech-bubble"
+                onClick={() => {
+                  setIsChatOpen(true);
+                  setShowSpeechBubble(false);
+                }}
+              >
+                <span className="bubble-sparkle">✦</span>
+                <span className="bubble-text">Need help or want a live demo? Ask ChangeWatch AI!</span>
+                <button
+                  type="button"
+                  className="speech-bubble-close"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowSpeechBubble(false);
+                  }}
+                  title="Dismiss greeting"
+                >
+                  <CloseIcon />
+                </button>
+              </div>
+            )}
+            <button
+              type="button"
+              className="assistant-launcher-btn"
+              onClick={() => {
+                setIsChatOpen(true);
+                setShowSpeechBubble(false);
+              }}
+              title="Open ChangeWatch AI Assistant"
+            >
+              <div className="launcher-icon-wrapper">
+                <ChatBotIcon />
+                <span className="launcher-pulse-dot" />
+              </div>
+              <span className="launcher-label">AI Assistant</span>
+            </button>
+          </div>
+        )}
+
+        {/* Floating Chat Window */}
+        {isChatOpen && (
+          <div className="floating-chat-window animate-pop-in">
+            {/* Window Header */}
+            <div className="float-chat-header">
+              <div className="float-header-left">
+                <div className="float-bot-avatar">
+                  <SparkleIcon />
+                  <span className="float-online-indicator" />
+                </div>
+                <div>
+                  <div className="float-bot-name-row">
+                    <h4>ChangeWatch AI</h4>
+                    <span className="float-badge-groq">Groq LPU</span>
+                  </div>
+                  <span className="float-bot-status">
+                    {result ? `Audit: ${currentMode.name}` : "Online • Ready to Guide You"}
+                  </span>
+                </div>
+              </div>
+
+              <div className="float-header-actions">
+                <button
+                  type="button"
+                  onClick={handleClearChat}
+                  className="btn-float-action"
+                  title="Reset conversation"
+                >
+                  <RefreshIcon />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsChatOpen(false);
+                    setShowSpeechBubble(true);
+                  }}
+                  className="btn-float-action"
+                  title="Minimize Assistant"
+                >
+                  <MinimizeIcon />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsChatOpen(false);
+                    setShowSpeechBubble(false);
+                  }}
+                  className="btn-float-action btn-float-close"
+                  title="Close Assistant"
+                >
+                  <CloseIcon />
+                </button>
+              </div>
+            </div>
+
+            {/* Quick Suggestion Pills Horizontal Strip */}
+            <div className="float-prompts-bar">
+              {((result && SUGGESTED_PROMPTS[selectedModeId]) || ONBOARDING_PROMPTS).map((prompt, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => handleSendChatMessage(prompt)}
+                  className="float-prompt-chip"
+                  disabled={chatLoading}
+                >
+                  <span>{prompt}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Message Thread */}
+            <div className="float-messages-body">
+              {chatMessages.map((msg) => (
+                <div
+                  key={msg.id}
+                  className={`float-msg-row ${msg.role === "user" ? "float-user-row" : "float-ai-row"}`}
+                >
+                  {msg.role === "assistant" && (
+                    <div className="float-msg-avatar-small ai-small">
+                      <SparkleIcon />
+                    </div>
+                  )}
+
+                  <div className={`float-msg-bubble ${msg.role === "user" ? "bubble-user" : "bubble-assistant"}`}>
+                    <div className="float-bubble-meta">
+                      <span className="float-sender-label">
+                        {msg.role === "user" ? "You" : "ChangeWatch AI"}
+                      </span>
+                      <span className="float-timestamp">{msg.timestamp}</span>
+                    </div>
+                    <FormattedChatText text={msg.text} />
+                  </div>
+
+                  {msg.role === "user" && (
+                    <div className="float-msg-avatar-small user-small">
+                      <span>U</span>
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              {chatLoading && (
+                <div className="float-msg-row float-ai-row">
+                  <div className="float-msg-avatar-small ai-small">
+                    <SparkleIcon />
+                  </div>
+                  <div className="float-msg-bubble bubble-assistant bubble-loading">
+                    <div className="typing-dots">
+                      <span />
+                      <span />
+                      <span />
+                    </div>
+                    <span className="typing-text">Thinking with Groq LPU...</span>
+                  </div>
+                </div>
+              )}
+
+              <div ref={floatChatEndRef} />
+            </div>
+
+            {/* Float Chat Input */}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSendChatMessage();
+              }}
+              className="float-chat-input-form"
+            >
+              <div className="float-input-bar">
+                <input
+                  type="text"
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  placeholder={result ? `Ask about this ${currentMode.name} diff...` : "Ask anything about ChangeWatch..."}
+                  className="float-input-field"
+                  disabled={chatLoading}
+                />
+                <button
+                  type="submit"
+                  disabled={!chatInput.trim() || chatLoading}
+                  className={`btn-float-send ${chatInput.trim() ? "active" : ""}`}
+                  title="Send message"
+                >
+                  <SendChatIcon />
+                </button>
+              </div>
+              <div className="float-input-caption">
+                <span>⚡ Groq Neural LPU • Multi-Modal Intelligence</span>
+              </div>
+            </form>
+          </div>
+        )}
+      </aside>
     </div>
   );
 }
