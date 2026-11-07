@@ -84,12 +84,12 @@ const CopyIcon = () => (
   </svg>
 );
 
-const ChatBotIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-    <path d="M8 10h.01" />
-    <path d="M12 10h.01" />
-    <path d="M16 10h.01" />
+const ChatBotIcon = ({ size = 22 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 2C12 7.5 7.5 12 2 12C7.5 12 12 16.5 12 22C12 16.5 16.5 12 22 12C16.5 12 12 7.5 12 2Z" fill="currentColor" fillOpacity="0.25" />
+    <path d="M12 2C12 7.5 7.5 12 2 12C7.5 12 12 16.5 12 22C12 16.5 16.5 12 22 12C16.5 12 12 7.5 12 2Z" />
+    <circle cx="19" cy="5" r="2" fill="currentColor" />
+    <circle cx="5" cy="19" r="1.5" fill="currentColor" />
   </svg>
 );
 
@@ -512,54 +512,66 @@ function FormattedChatText({ text }) {
   );
 }
 
-// Grounded Local AI Diff Generator (Guarantees immediate, high-precision answers even if Render server sleeps)
+// Human-Friendly, ChatGPT-Style Conversational Engine (Guarantees thoughtful answers even during server spin-up)
 function generateLocalAiDiffResponse(rawQuery, auditResult, mode) {
   const query = (rawQuery || "").toLowerCase();
 
-  // If no document comparison has been run yet, act as a friendly guide & assistant
+  // 1. Casual greetings & conversational openers
+  if (query.match(/^(hi|hello|hey|greetings|good morning|good afternoon|good evening|who are you|what can you do)/i)) {
+    if (auditResult) {
+      return `Hey there! 😊 I'm right here. I've already audited your **${mode?.name || "active"}** documents and flagged all the key revisions.\n\n` +
+        `Feel free to ask me anything about the changes — like whether any fees went up, what the biggest risk is, or ask me to draft a quick email update for your team!`;
+    }
+    return `Hey there! 😊 I'm **ChangeWatch AI**, your document audit assistant. Think of me like ChatGPT, but built specifically to inspect document revisions line-by-line so you never get caught off guard by sneaky changes, price hikes, or altered clauses.\n\n` +
+      `You can ask me how ChangeWatch works, which files you can upload, or click **'⚡ Run Instant Live Demo'** to see a full comparison in action right now!`;
+  }
+
+  // 2. If no document comparison has been run yet, act as a helpful conversational guide
   if (!auditResult) {
-    if (query.includes("demo") || query.includes("test") || query.includes("sample") || query.includes("run")) {
-      return "⚡ I have loaded the **Academic & Cutoffs Live Demo** for you on the workbench!\n\n" +
-        "You can inspect the 4 detected discrepancies below, including the +440 rank cutoff relaxation, doubled intake capacity, and caution deposit schedule. Ask me any question about these numbers!";
+    if (query.includes("demo") || query.includes("test") || query.includes("sample") || query.includes("run") || query.includes("try")) {
+      return `Sure thing! I just loaded the **Academic & Cutoffs demo** onto your workbench.\n\n` +
+        `If you look at the results below, you'll see we caught **4 major changes**, including:\n` +
+        `• A **+440 rank relaxation** for Computer Science (great news for waitlisted students!)\n` +
+        `• Intake for AI & Data Science **doubled from 60 to 120 seats**\n` +
+        `• A new **₹6,500 refundable lab deposit** added to tuition fees\n\n` +
+        `Take a look, and feel free to ask me any questions about what these changes mean!`;
     }
     if (query.includes("how") || query.includes("work") || query.includes("use") || query.includes("guide") || query.includes("step")) {
-      return "💡 **How ChangeWatch Works in 3 Simple Steps:**\n\n" +
-        "• **1. Select Domain Mode**: Academic & Cutoffs, Legal & Contracts, Invoices & Quotations, Policies & Insurance, or General & Others.\n" +
-        "• **2. Upload Base & Revised Files**: Drag and drop two versions (PDF, Word, Excel, scanned image, or TXT).\n" +
-        "• **3. Neural Discrepancy Audit**: Embedded OCR parses scans and tables, while Groq LPUs pinpoint score updates, altered clauses, and numerical differences.\n\n" +
-        "Click **'⚡ Run Instant Live Demo'** to see it in action!";
+      return `It's actually super simple! Think of ChangeWatch as your automated second pair of eyes:\n\n` +
+        `1. **Choose your domain mode** (like Academic cutoffs, Legal contracts, or Invoices) so our AI knows what matters most to you.\n` +
+        `2. **Drop in your two document files** — we support PDFs, Word docs, Excel spreadsheets, plain text, and even scanned photos/printed certificates thanks to built-in OCR.\n` +
+        `3. **Review your audit**: In just seconds, our Groq-powered AI highlights every changed number, revised clause, and deadline side-by-side, and gives you a verified PDF report.\n\n` +
+        `Would you like to try a live sample right now? Just click **'⚡ Run Instant Live Demo'**!`;
     }
     if (query.includes("file") || query.includes("format") || query.includes("type") || query.includes("pdf") || query.includes("word") || query.includes("excel") || query.includes("image") || query.includes("ocr")) {
-      return "📄 **Universal File Format Support:**\n\n" +
-        "• **PDF Documents** (`.pdf`) — Full vector & layout text extraction\n" +
-        "• **Microsoft Word** (`.docx`) — Structure & clause comparison\n" +
-        "• **Excel & Spreadsheets** (`.xlsx`, `.xls`, `.csv`) — Cell-by-cell tabular diff\n" +
-        "• **Scanned Images & Marksheets** (`.png`, `.jpg`, `.jpeg`, `.webp`) — High-precision optical character recognition (OCR)\n" +
-        "• **Plain Text & Markdown** (`.txt`, `.md`, `.rtf`, `.json`)";
+      return `You can upload pretty much any standard document format without doing any manual conversion:\n\n` +
+        `• **PDF Documents** (\`.pdf\`) — Scanned or text-based\n` +
+        `• **Word Documents** (\`.docx\`) — Service agreements, memos, and drafts\n` +
+        `• **Excel Spreadsheets & CSV** (\`.xlsx\`, \`.csv\`) — Financial sheets and tabular data\n` +
+        `• **Photos & Scanned Images** (\`.png\`, \`.jpg\`, \`.jpeg\`, \`.webp\`) — Read cleanly via our optical character recognition (OCR) engine\n` +
+        `• **Plain Text** (\`.txt\`, \`.md\`, \`.json\`)\n\n` +
+        `Just drop any two files into the workbench above and click Compare!`;
     }
-    if (query.includes("mode") || query.includes("academic") || query.includes("legal") || query.includes("invoice") || query.includes("policy") || query.includes("general")) {
-      return "🎓 **5 Domain-Optimized Audit Modes:**\n\n" +
-        "• **🎓 Academic & Cutoffs**: Detects rank shifts, seat quota expansions, caution deposit additions, and counseling deadlines.\n" +
-        "• **⚖️ Legal & Contracts**: Highlights liability sub-limits, indemnity alterations, and termination clauses.\n" +
-        "• **💰 Invoices & Quotations**: Spots unapproved fee surcharges, license rate hikes, and billing terms.\n" +
-        "• **🛡️ Policies & Insurance**: Flags room rent caps, co-payments on modern surgeries, and waiting periods.\n" +
-        "• **🌐 General & Others**: Universal comparison for research papers, specifications, and arbitrary text.";
+    if (query.includes("mode") || query.includes("academic") || query.includes("legal") || query.includes("invoice") || query.includes("policy") || query.includes("general") || query.includes("other")) {
+      return `Domain modes allow our AI to tune its focus depending on what you're reviewing:\n\n` +
+        `• 🎓 **Academic & Cutoffs**: Focuses on rank shifts, seat quota expansions, fee additions, and counseling schedules.\n` +
+        `• ⚖️ **Legal & Contracts**: Zeroes in on liability caps, indemnities, and altered termination clauses.\n` +
+        `• 💰 **Invoices & Quotations**: Spots unapproved surcharges, unit rate hikes, and tighter payment cycles.\n` +
+        `• 🛡️ **Policies & Insurance**: Surfaces room rent capping, co-payments on modern surgeries, and waiting periods.\n` +
+        `• 🌐 **General & Others**: A universal lens for research papers, technical specs, proposals, or general prose.`;
     }
     if (query.includes("founder") || query.includes("creator") || query.includes("who built") || query.includes("author") || query.includes("shree")) {
-      return "👨‍💻 **Founder & Architect:**\n\nChangeWatch was designed, architected, and engineered from scratch by **Shree Navaneetha V R** (1st Year B.E. in Computer Science & Engineering) as an independent full-stack AI project.";
+      return `ChangeWatch was designed, architected, and built from scratch by **Shree Navaneetha V R**, a 1st Year B.E. student in Computer Science & Engineering!\n\n` +
+        `He engineered the entire full-stack system — including the multi-modal OCR ingestion, glassmorphic UI, and Groq LPU neural reasoning pipelines. You can find his verified LinkedIn, GitHub, and email links at the bottom of the page!`;
     }
-    return "👋 Welcome to **ChangeWatch AI Assistant**!\n\n" +
-      "I can guide you through comparing document revisions, explain detected changes, or load an instant demo. Try asking:\n" +
-      "• *'How does ChangeWatch work?'*\n" +
-      "• *'What files can I upload?'*\n" +
-      "• Or click **'⚡ Run Instant Live Demo'** to see a full audit right now!";
+    return `I'm here to help! 😊 You can ask me how ChangeWatch audits documents, which file types work best, or click **'⚡ Run Instant Live Demo'** to see a full comparison in action right now!`;
   }
 
   const changes = auditResult.changes || [];
   const actions = auditResult.actions || [];
   const modeName = mode?.name || "General";
 
-  // 1. Critical / High-Risk / Priority Inquiries
+  // 3. High-Risk / Critical Inquiries
   if (
     query.includes("risk") ||
     query.includes("critical") ||
@@ -567,23 +579,23 @@ function generateLocalAiDiffResponse(rawQuery, auditResult, mode) {
     query.includes("danger") ||
     query.includes("priority") ||
     query.includes("highest") ||
-    query.includes("severe")
+    query.includes("severe") ||
+    query.includes("worst")
   ) {
     const importantChanges = changes.filter((c) => c.importance === "important");
     if (importantChanges.length === 0) {
-      return `Good news! In this **${modeName}** audit, no discrepancies were marked as Critical Priority. All ${changes.length} detected adjustments are standard operational or editorial updates.`;
+      return `Good news! None of the detected changes in this **${modeName}** audit were flagged as critical risks. All ${changes.length} adjustments appear to be standard operational or editorial updates.`;
     }
-    return `🚨 **Critical Priority Discrepancies Flagged (${importantChanges.length} found):**\n\n` +
+    return `I reviewed the audit carefully, and here are the **${importantChanges.length} critical items** you'll want to pay closest attention to:\n\n` +
       importantChanges.map((c, i) => (
-        `• **${i + 1}. ${c.title}**\n` +
-        `  - **Previous:** ${c.oldValue || "—"}\n` +
-        `  - **Revised:** ${c.newValue || "—"}\n` +
-        `  - **Risk Impact:** ${c.explanation || "N/A"}`
+        `**${i + 1}. ${c.title}**\n` +
+        `• **What changed**: Moved from *"${c.oldValue || "—"}"* to *"${c.newValue || "—"}"*\n` +
+        `• **Why it matters**: ${c.explanation || "Directly impacts the terms of this document."}`
       )).join("\n\n") +
-      `\n\n💡 **Priority Recommendation:** Prioritize resolving these ${importantChanges.length} critical items before approving or executing this revision.`;
+      `\n\n💡 **My advice**: Before approving or signing off on this revision, make sure these ${importantChanges.length} points are reconciled or agreed upon.`;
   }
 
-  // 2. Draft an Email or Message
+  // 4. Draft an Email or Message
   if (
     query.includes("email") ||
     query.includes("draft") ||
@@ -594,20 +606,23 @@ function generateLocalAiDiffResponse(rawQuery, auditResult, mode) {
     query.includes("slack") ||
     query.includes("message")
   ) {
-    const topChanges = changes.slice(0, 3).map((c, i) => `  ${i + 1}. ${c.title}: ${c.newValue}`).join("\n");
-    const topAction = actions[0] || "Review the full redline audit certificate.";
-    return `📧 **Ready-to-Send Email Draft:**\n\n` +
-      `**Subject:** Urgent Update: Key Revisions Detected in ${modeName} Audit\n\n` +
+    const topBullets = changes.slice(0, 3).map((c) => `• ${c.title}: Updated to "${c.newValue}"`).join("\n");
+    const topAction = actions[0] || "Review the full redline certificate on ChangeWatch.";
+    return `Here's a clean, professional email draft you can send straight to your team or client:\n\n` +
+      `---\n\n` +
+      `**Subject:** Quick Update: Key Revisions Detected in ${modeName} Document\n\n` +
       `Hi Team,\n\n` +
-      `Following our automated comparison on ChangeWatch, we identified **${auditResult.totalChanges || changes.length} discrepancies** between the document versions.\n\n` +
-      `**Executive Summary:**\n${auditResult.summary}\n\n` +
-      `**Top Revision Highlights:**\n${topChanges}\n\n` +
-      `**Immediate Next Step:**\n• ${topAction}\n\n` +
-      `You can review the full breakdown or download the signed PDF audit certificate directly from ChangeWatch.\n\n` +
-      `Best regards,\n*ChangeWatch Document Intelligence*`;
+      `I ran our two document versions through ChangeWatch to see what changed, and we detected **${auditResult.totalChanges || changes.length} notable updates**.\n\n` +
+      `**Summary:**\n${auditResult.summary}\n\n` +
+      `**Key Highlights:**\n${topBullets}\n\n` +
+      `**Recommended Next Step:**\n• ${topAction}\n\n` +
+      `Let me know if you'd like me to send over the official verified PDF audit report.\n\n` +
+      `Best,\n` +
+      `---\n\n` +
+      `Feel free to tweak any details before sending!`;
   }
 
-  // 3. Financial, Fees, Surcharges, Costs, Rates
+  // 5. Financial, Fees, Surcharges, Costs, Rates
   if (
     query.includes("fee") ||
     query.includes("cost") ||
@@ -628,18 +643,19 @@ function generateLocalAiDiffResponse(rawQuery, auditResult, mode) {
     );
 
     if (feeChanges.length > 0) {
-      return `💰 **Financial & Billing Discrepancies Detected:**\n\n` +
-        feeChanges.map((c) => (
-          `• **${c.title}**\n` +
-          `  - **Previous:** ${c.oldValue || "—"}\n` +
-          `  - **Revised:** ${c.newValue || "—"}\n` +
-          `  - **Details:** ${c.explanation || "Financial adjustment"}`
-        )).join("\n\n");
+      return `Let's look at the numbers! Here are the financial adjustments spotted in this revision:\n\n` +
+        feeChanges.map((c, i) => (
+          `**${i + 1}. ${c.title}**\n` +
+          `• **Previously**: ${c.oldValue || "—"}\n` +
+          `• **Revised**: ${c.newValue || "—"}\n` +
+          `• **Impact**: ${c.explanation || "Adjusted pricing structure."}`
+        )).join("\n\n") +
+        `\n\nMake sure your accounting or finance team verifies these new line items!`;
     }
-    return `💰 In this **${modeName}** comparison, no explicit pricing, surcharge, or fee alterations were detected among the line items.`;
+    return `I checked all line items, and there don't appear to be any direct fee, surcharge, or pricing changes in this revision!`;
   }
 
-  // 4. Deadlines, Dates, Schedules, Extensions
+  // 6. Deadlines, Dates, Schedules
   if (
     query.includes("deadline") ||
     query.includes("date") ||
@@ -655,18 +671,18 @@ function generateLocalAiDiffResponse(rawQuery, auditResult, mode) {
     );
 
     if (dateChanges.length > 0) {
-      return `📅 **Timeline & Deadline Adjustments:**\n\n` +
+      return `Here are the important dates and timeline adjustments that moved in this version:\n\n` +
         dateChanges.map((c) => (
           `• **${c.title}**\n` +
-          `  - **Old Schedule:** ${c.oldValue || "—"}\n` +
-          `  - **New Schedule:** ${c.newValue || "—"}\n` +
-          `  - **Impact:** ${c.explanation || "Timeline updated"}`
+          `  - **Old date/window**: ${c.oldValue || "—"}\n` +
+          `  - **New date/window**: ${c.newValue || "—"}\n` +
+          `  - **Details**: ${c.explanation || "Schedule revised."}`
         )).join("\n\n");
     }
-    return `📅 No schedule or deadline revisions were detected in this audit dataset.`;
+    return `No dates or reporting deadlines appear to have shifted in this revision.`;
   }
 
-  // 5. Academic Cutoffs, Ranks, Seats
+  // 7. Academic Cutoffs, Ranks, Seats
   if (
     query.includes("cutoff") ||
     query.includes("rank") ||
@@ -679,40 +695,41 @@ function generateLocalAiDiffResponse(rawQuery, auditResult, mode) {
       (c.title + " " + (c.explanation || "") + " " + (c.oldValue || "") + " " + (c.newValue || "")).match(/(cutoff|rank|seat|intake|quota|allotment|branch)/i)
     );
     if (academicItems.length > 0) {
-      return `🎓 **Academic Cutoff & Intake Analysis:**\n\n` +
+      return `Here's what happened with rank cutoffs and seat capacity in this round:\n\n` +
         academicItems.map((c) => (
           `• **${c.title}**\n` +
-          `  - **Round 1:** ${c.oldValue || "—"}\n` +
-          `  - **Round 2 (Revised):** ${c.newValue || "—"}\n` +
-          `  - **Analysis:** ${c.explanation || "N/A"}`
+          `  - **Round 1**: ${c.oldValue || "—"}\n` +
+          `  - **Round 2 Revised**: ${c.newValue || "—"}\n` +
+          `  - **What it means**: ${c.explanation || "Shift in eligibility metrics."}`
         )).join("\n\n");
     }
   }
 
-  // 6. Action Items / Recommendations
+  // 8. Next Steps & Recommendations
   if (
     query.includes("action") ||
     query.includes("recommend") ||
     query.includes("todo") ||
     query.includes("step") ||
-    query.includes("what should") ||
-    query.includes("what do i do")
+    query.includes("what should i do") ||
+    query.includes("next")
   ) {
     if (actions.length > 0) {
-      return `📋 **Recommended Operational Action Checklist:**\n\n` +
-        actions.map((act, i) => `• **Step ${i + 1}:** ${act}`).join("\n") +
-        `\n\n💡 Make sure to download the Official PDF Audit Certificate for permanent archival proof.`;
+      return `Here are the top practical steps I'd recommend based on this audit:\n\n` +
+        actions.map((act, i) => `**Step ${i + 1}**: ${act}`).join("\n\n") +
+        `\n\nTip: You can also click **'Download PDF Report'** to save an official vector certificate for your records!`;
     }
-    return `📋 No specific action checklist items were flagged for these documents.`;
+    return `Since both versions are identical, there are no action steps required right now!`;
   }
 
-  // 7. General / Comprehensive Fallback
-  return `🔍 **Audit Analysis for "${rawQuery}":**\n\n` +
-    `**Executive Summary:**\n${auditResult.summary}\n\n` +
-    `**Detected Discrepancies Overview (${changes.length} total):**\n` +
-    changes.slice(0, 3).map((c) => `• **${c.title}** (${c.importance === 'important' ? 'Critical' : 'Standard'}): ${c.explanation}`).join("\n") +
-    (changes.length > 3 ? `\n• *...and ${changes.length - 3} more adjustments detailed in the audit card.*` : "") +
-    (actions.length > 0 ? `\n\n**Key Next Step:**\n• ${actions[0]}` : "");
+  // 9. General Conversational Fallback (Thoughtful & Natural)
+  return `Looking closely at this revision, here is the big picture:\n\n` +
+    `**Executive Overview**:\n${auditResult.summary}\n\n` +
+    `**Key Adjustments Spotted (${changes.length} total)**:\n` +
+    changes.slice(0, 3).map((c) => `• **${c.title}**: ${c.explanation || c.newValue}`).join("\n") +
+    (changes.length > 3 ? `\n• *...and ${changes.length - 3} other adjustments detailed in the redline cards above.*` : "") +
+    (actions.length > 0 ? `\n\n**Immediate Priority**:\n${actions[0]}` : "") +
+    `\n\nLet me know if you want me to zoom in on any specific clause, number, or fee!`;
 }
 
 let messageCounter = 0;
@@ -732,19 +749,18 @@ function getInitialChatMessage(auditResult, mode) {
   if (!auditResult) {
     return createChatMessage(
       "assistant",
-      "👋 Hi there! I'm your **ChangeWatch AI Assistant**.\n\n" +
-        "I'm here to help you audit document changes, explain our multi-modal OCR extraction, or load a live demo for you right now.\n\n" +
-        "What would you like to explore? Click any suggestion below or ask me a question!"
+      "Hey there! 👋 I'm **ChangeWatch AI**, your personal document audit assistant.\n\n" +
+        "Think of me like ChatGPT, but built specifically to help you catch every hidden change, price increase, or altered clause between document versions.\n\n" +
+        "You can click **'⚡ Run Instant Live Demo'** below to see how it works on real documents, or ask me any question!"
     );
   }
   const count = auditResult.totalChanges || (auditResult.changes ? auditResult.changes.length : 0);
   const criticalCount = (auditResult.changes || []).filter((c) => c.importance === "important").length;
   return createChatMessage(
     "assistant",
-    `👋 I have indexed your document diff in **${mode.name}** mode.\n\n` +
-      `• **${count} total discrepancies** indexed\n` +
-      `• **${criticalCount} critical priority items** flagged\n\n` +
-      `Ask me any question regarding specific numbers, cutoff ranks, fee adjustments, or altered clauses. You can also click the quick prompt pills below!`
+    `I've finished reviewing the changes in your **${mode.name}** documents!\n\n` +
+      `We spotted **${count} total revisions**, including **${criticalCount} critical items** that have a direct impact.\n\n` +
+      `Ask me anything in plain English — like *"What's the biggest risk?"*, *"Did fees change?"*, or *"Draft a quick update email for my team"*!`
   );
 }
 
@@ -2067,7 +2083,7 @@ export default function App() {
             <div className="float-chat-header">
               <div className="float-header-left">
                 <div className="float-bot-avatar">
-                  <SparkleIcon />
+                  <ChatBotIcon size={19} />
                   <span className="float-online-indicator" />
                 </div>
                 <div>
@@ -2139,7 +2155,7 @@ export default function App() {
                 >
                   {msg.role === "assistant" && (
                     <div className="float-msg-avatar-small ai-small">
-                      <SparkleIcon />
+                      <ChatBotIcon size={14} />
                     </div>
                   )}
 

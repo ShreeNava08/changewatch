@@ -2205,18 +2205,18 @@
 }
 
 .assistant-speech-bubble {
-  background: rgba(15, 23, 42, 0.94);
+  background: rgba(18, 14, 28, 0.95);
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(99, 102, 241, 0.4);
+  border: 1px solid rgba(244, 63, 94, 0.4);
   border-radius: 16px;
   padding: 0.65rem 1rem;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4), 0 0 15px rgba(99, 102, 241, 0.25);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), 0 0 18px rgba(244, 63, 94, 0.25);
   display: flex;
   align-items: center;
   gap: 0.6rem;
   font-size: 0.82rem;
-  color: #e2e8f0;
-  max-width: 280px;
+  color: #f1f5f9;
+  max-width: 290px;
   cursor: pointer;
   animation: floatBubbleBounce 3s infinite ease-in-out;
   transition: all 0.2s ease;
@@ -2224,11 +2224,12 @@
 
 .assistant-speech-bubble:hover {
   transform: translateY(-2px);
-  border-color: #818cf8;
+  border-color: #fb7185;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.55), 0 0 24px rgba(244, 63, 94, 0.35);
 }
 
 .bubble-sparkle {
-  color: #818cf8;
+  color: #fb7185;
   font-size: 0.95rem;
   flex-shrink: 0;
 }
@@ -2265,35 +2266,36 @@
   }
 }
 
-/* Launcher Pill Button */
+/* Launcher Pill Button - High-Contrast Radiant Sunset Theme */
 .assistant-launcher-btn {
-  background: linear-gradient(135deg, #4f46e5, #0ea5e9);
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: linear-gradient(135deg, #f43f5e 0%, #ec4899 50%, #8b5cf6 100%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   color: #fff;
   border-radius: 999px;
   padding: 0.65rem 1.15rem 0.65rem 0.75rem;
   display: flex;
   align-items: center;
   gap: 0.65rem;
-  box-shadow: 0 12px 30px rgba(79, 70, 229, 0.45), 0 0 20px rgba(14, 165, 233, 0.3);
+  box-shadow: 0 12px 32px rgba(244, 63, 94, 0.45), 0 0 22px rgba(236, 72, 153, 0.35);
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .assistant-launcher-btn:hover {
-  transform: translateY(-3px) scale(1.03);
-  box-shadow: 0 16px 36px rgba(79, 70, 229, 0.6), 0 0 25px rgba(14, 165, 233, 0.4);
+  transform: translateY(-3px) scale(1.04);
+  box-shadow: 0 16px 40px rgba(244, 63, 94, 0.6), 0 0 30px rgba(236, 72, 153, 0.45);
 }
 
 .launcher-icon-wrapper {
   width: 38px;
   height: 38px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
+  backdrop-filter: blur(4px);
 }
 
 .launcher-pulse-dot {
@@ -2312,6 +2314,7 @@
   font-weight: 700;
   font-size: 0.9rem;
   letter-spacing: -0.01em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
 }
 
 /* Floating Chat Window (Pop Out) */
@@ -2320,12 +2323,12 @@
   max-width: calc(100vw - 32px);
   height: 580px;
   max-height: calc(100vh - 90px);
-  background: rgba(11, 16, 29, 0.96);
+  background: rgba(14, 12, 24, 0.96);
   backdrop-filter: blur(28px);
   -webkit-backdrop-filter: blur(28px);
-  border: 1px solid rgba(99, 102, 241, 0.35);
+  border: 1px solid rgba(244, 63, 94, 0.35);
   border-radius: 22px;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(99, 102, 241, 0.25);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.75), 0 0 35px rgba(244, 63, 94, 0.2);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -2370,13 +2373,13 @@
   width: 36px;
   height: 36px;
   border-radius: 11px;
-  background: linear-gradient(135deg, #4f46e5, #0ea5e9);
+  background: linear-gradient(135deg, #f43f5e 0%, #ec4899 50%, #8b5cf6 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   color: #fff;
   position: relative;
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.35);
+  box-shadow: 0 4px 14px rgba(244, 63, 94, 0.4);
 }
 
 .float-online-indicator {
@@ -2483,8 +2486,8 @@
 }
 
 .float-prompt-chip:hover:not(:disabled) {
-  background: rgba(99, 102, 241, 0.22);
-  border-color: rgba(129, 140, 248, 0.5);
+  background: rgba(244, 63, 94, 0.18);
+  border-color: rgba(244, 63, 94, 0.45);
   color: #fff;
   transform: translateY(-1px);
 }
@@ -2535,8 +2538,9 @@
 }
 
 .float-msg-avatar-small.ai-small {
-  background: linear-gradient(135deg, #4f46e5, #0ea5e9);
+  background: linear-gradient(135deg, #f43f5e, #8b5cf6);
   color: #fff;
+  box-shadow: 0 2px 8px rgba(244, 63, 94, 0.35);
 }
 
 .float-msg-avatar-small.user-small {
@@ -2596,8 +2600,8 @@
 }
 
 .float-input-bar:focus-within {
-  border-color: #6366f1;
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25);
+  border-color: #ec4899;
+  box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.25);
   background: rgba(30, 41, 59, 0.95);
 }
 
@@ -2632,10 +2636,10 @@
 }
 
 .btn-float-send.active {
-  background: linear-gradient(135deg, #4f46e5, #0ea5e9);
-  border-color: #818cf8;
+  background: linear-gradient(135deg, #f43f5e, #ec4899);
+  border-color: #fb7185;
   color: #fff;
-  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.4);
+  box-shadow: 0 2px 10px rgba(244, 63, 94, 0.45);
 }
 
 .btn-float-send:disabled {
