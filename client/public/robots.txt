@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://changewatch-seven.vercel.app/sitemap.xml
