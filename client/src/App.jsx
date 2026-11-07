@@ -98,6 +98,13 @@ const ShieldIcon = () => (
   </svg>
 );
 
+const LockIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+  </svg>
+);
+
 const ZapIcon = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
@@ -1691,6 +1698,7 @@ export default function App() {
             <a href="#how-it-works">How It Works</a>
             {result && <a href="#chat-diff" className="nav-chat-link">💬 Chat Diff</a>}
             <a href="#architecture">Architecture</a>
+            <a href="#security">Security</a>
             <a href="#faq">FAQ</a>
             <a href="#founder">Founder</a>
           </nav>
@@ -1904,6 +1912,30 @@ export default function App() {
                   </>
                 )}
               </div>
+            </div>
+
+            {/* Workbench Security & Privacy Trust Strip */}
+            <div className="workbench-trust-strip">
+              <span className="trust-item">
+                <span className="trust-icon"><ShieldIcon /></span>
+                <span>Zero Data Retention</span>
+              </span>
+              <span className="trust-dot">•</span>
+              <span className="trust-item">
+                <span className="trust-icon"><LockIcon /></span>
+                <span>TLS 1.3 256-bit AES</span>
+              </span>
+              <span className="trust-dot">•</span>
+              <span className="trust-item">
+                <span className="trust-icon"><CpuIcon /></span>
+                <span>Stateless In-Memory Only</span>
+              </span>
+              <span className="trust-dot">•</span>
+              <span className="trust-item">
+                <span className="trust-icon"><CheckIcon /></span>
+                <span>Zero Model Training</span>
+              </span>
+              <a href="#security" className="trust-specs-link">Security Specs ↗</a>
             </div>
 
             {/* Action Buttons */}
@@ -2660,6 +2692,120 @@ export default function App() {
                 {openFaq === idx && <p className="faq-a">{faq.a}</p>}
               </div>
             ))}
+          </div>
+        </section>
+
+        {/* =========================================================
+            ENTERPRISE PRIVACY & SECURITY ARCHITECTURE SECTION
+        ========================================================= */}
+        <section id="security" className="security-section">
+          <div className="brochure-header">
+            <div className="hero-pill hero-pill-security">
+              <span className="sparkle">🛡️</span> Enterprise Privacy Guarantee
+            </div>
+            <h2>Bank-Grade Privacy & Zero-Retention Architecture</h2>
+            <p>
+              Your sensitive contracts, financial ledgers, and candidate mark sheets are processed 
+              with strict ephemeral isolation. No permanent storage. No LLM training. Zero human in the loop.
+            </p>
+          </div>
+
+          {/* 4 Core Pillars Grid */}
+          <div className="security-pillars-grid">
+            {/* Pillar 1 */}
+            <div className="security-pillar-card">
+              <div className="pillar-icon-box icon-emerald">
+                <ShieldIcon />
+              </div>
+              <div className="pillar-badge badge-emerald">ZERO RETENTION</div>
+              <h3>100% Stateless In-Memory Stream</h3>
+              <p>
+                Files are streamed into volatile RAM buffers solely to run multi-modal OCR and neural reasoning. 
+                Documents are never written to physical disks, databases, or cloud object storage, and are immediately purged after diff completion.
+              </p>
+              <div className="pillar-tags">
+                <span>Zero Disk Writes</span>
+                <span>Stateless Buffers</span>
+                <span>Instant Garbage Purge</span>
+              </div>
+            </div>
+
+            {/* Pillar 2 */}
+            <div className="security-pillar-card">
+              <div className="pillar-icon-box icon-blue">
+                <LockIcon />
+              </div>
+              <div className="pillar-badge badge-blue">ENCRYPTED IN TRANSIT</div>
+              <h3>End-to-End TLS 1.3 Transport</h3>
+              <p>
+                All payloads entering or leaving ChangeWatch are encrypted using 256-bit AES cryptographic transport encryption 
+                with forward secrecy. Man-in-the-middle tampering, MITM interception, or packet sniffing is cryptographically blocked.
+              </p>
+              <div className="pillar-tags">
+                <span>TLS 1.3 Standard</span>
+                <span>256-Bit AES</span>
+                <span>Perfect Forward Secrecy</span>
+              </div>
+            </div>
+
+            {/* Pillar 3 */}
+            <div className="security-pillar-card">
+              <div className="pillar-icon-box icon-purple">
+                <CpuIcon />
+              </div>
+              <div className="pillar-badge badge-purple">PROPRIETARY SHIELD</div>
+              <h3>Zero AI Model Training Guarantee</h3>
+              <p>
+                Your confidential clauses, pricing tables, formulas, and grades are strictly shielded. 
+                Under our Groq LPU enterprise terms, customer inputs are never ingested to train, tune, or evaluate public or private AI models.
+              </p>
+              <div className="pillar-tags">
+                <span>No LLM Ingestion</span>
+                <span>Strict NDA Ready</span>
+                <span>Isolated Inference</span>
+              </div>
+            </div>
+
+            {/* Pillar 4 */}
+            <div className="security-pillar-card">
+              <div className="pillar-icon-box icon-amber">
+                <ZapIcon />
+              </div>
+              <div className="pillar-badge badge-amber">AUDIT PROOF</div>
+              <h3>Cryptographic Verification Hashes</h3>
+              <p>
+                ChangeWatch generates deterministic cryptographic hashes of compared versions. This creates an immutable, tamper-evident 
+                audit record stamped on every official PDF certificate without exposing proprietary document contents.
+              </p>
+              <div className="pillar-tags">
+                <span>Tamper-Proof Hashes</span>
+                <span>Verifiable Signatures</span>
+                <span>Court-Admissible PDF</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Security SLA Metric Bar */}
+          <div className="security-sla-strip">
+            <div className="sla-metric">
+              <span className="sla-val">0 ms</span>
+              <span className="sla-label">Persistent Data Retention</span>
+            </div>
+            <div className="sla-divider" />
+            <div className="sla-metric">
+              <span className="sla-val">100%</span>
+              <span className="sla-label">Stateless Buffer Purge</span>
+            </div>
+            <div className="sla-divider" />
+            <div className="sla-metric">
+              <span className="sla-val">0%</span>
+              <span className="sla-label">Model Training Ingestion</span>
+            </div>
+            <div className="sla-divider" />
+            <div className="sla-metric">
+              <span className="sla-val">256-bit</span>
+              <span className="sla-label">Cryptographic Transport</span>
+            </div>
           </div>
         </section>
       </main>
