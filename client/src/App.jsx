@@ -630,9 +630,9 @@ function generateLocalAiDiffResponse(rawQuery, auditResult, mode) {
         `• 🛡️ **Policies & Insurance**: Surfaces room rent capping, co-payments on modern surgeries, and waiting periods.\n` +
         `• 🌐 **General & Others**: A universal lens for research papers, technical specs, proposals, or general prose.`;
     }
-    if (query.includes("founder") || query.includes("creator") || query.includes("who built") || query.includes("author") || query.includes("shree")) {
-      return `ChangeWatch was designed, architected, and built from scratch by **Shree Navaneetha V R**, a 1st Year B.E. student in Computer Science & Engineering!\n\n` +
-        `He engineered the entire full-stack system — including the multi-modal OCR ingestion, glassmorphic UI, and Groq LPU neural reasoning pipelines. You can find his verified LinkedIn, GitHub, and email links at the bottom of the page!`;
+    if (query.includes("founder") || query.includes("creator") || query.includes("who built") || query.includes("author") || query.includes("shree") || query.includes("navaneeth")) {
+      return `ChangeWatch was designed, architected, and built from scratch by **Shree Navaneeth** (Shree Navaneetha V R), a 1st Year B.E. student in Computer Science & Engineering!\n\n` +
+        `He engineered the entire full-stack system — including multi-modal OCR extraction, glassmorphic UI, and Groq LPU neural reasoning pipelines. You can find his verified LinkedIn, GitHub, and email channels in the Founder section below!`;
     }
     return `I'm here to help! 😊 You can ask me how ChangeWatch audits documents, which file types work best, or click **'⚡ Run Instant Live Demo'** to see a full comparison in action right now!`;
   }
@@ -2943,6 +2943,7 @@ export default function App() {
               </div>
 
               <h2 className="executive-name">Shree Navaneetha V R</h2>
+              <div className="founder-handle-tag">Known as <strong>Shree Navaneeth</strong></div>
 
               <p className="executive-degree">
                 Bachelor of Engineering (B.E.) in Computer Science & Engineering

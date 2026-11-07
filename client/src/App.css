@@ -1629,6 +1629,21 @@
   -webkit-text-fill-color: transparent;
 }
 
+.founder-handle-tag {
+  display: inline-block;
+  font-size: 0.82rem;
+  color: #94a3b8;
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+  margin-bottom: 0.6rem;
+}
+.founder-handle-tag strong {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
 .executive-degree {
   font-size: 0.95rem;
   font-weight: 600;
