@@ -60,6 +60,30 @@ const TrashIcon = () => (
   </svg>
 );
 
+const CardsIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="3" width="7" height="7" rx="1" />
+    <rect x="14" y="3" width="7" height="7" rx="1" />
+    <rect x="14" y="14" width="7" height="7" rx="1" />
+    <rect x="3" y="14" width="7" height="7" rx="1" />
+  </svg>
+);
+
+const SplitIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="2" y="3" width="20" height="18" rx="2" />
+    <line x1="12" y1="3" x2="12" y2="21" />
+  </svg>
+);
+
+const UnifiedIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="3" y1="6" x2="21" y2="6" />
+    <line x1="3" y1="12" x2="21" y2="12" />
+    <line x1="3" y1="18" x2="21" y2="18" />
+  </svg>
+);
+
 const CpuIcon = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <rect x="4" y="4" width="16" height="16" rx="2" />
@@ -1137,6 +1161,87 @@ function executeCsvExport(result, oldFile, newFile, currentMode, onDone) {
   if (onDone) onDone();
 }
 
+// Pure Utility Function for Word-Level Diff Tokenization
+function computeWordDiff(oldStr, newStr) {
+  if (!oldStr && !newStr) return { oldTokens: [], newTokens: [] };
+  if (!oldStr) return { oldTokens: [], newTokens: [{ text: String(newStr), type: "added" }] };
+  if (!newStr) return { oldTokens: [{ text: String(oldStr), type: "removed" }], newTokens: [] };
+
+  const oldWords = String(oldStr).split(/(\s+)/);
+  const newWords = String(newStr).split(/(\s+)/);
+
+  let prefixLen = 0;
+  while (
+    prefixLen < oldWords.length &&
+    prefixLen < newWords.length &&
+    oldWords[prefixLen] === newWords[prefixLen]
+  ) {
+    prefixLen++;
+  }
+
+  let suffixLen = 0;
+  while (
+    suffixLen < oldWords.length - prefixLen &&
+    suffixLen < newWords.length - prefixLen &&
+    oldWords[oldWords.length - 1 - suffixLen] === newWords[newWords.length - 1 - suffixLen]
+  ) {
+    suffixLen++;
+  }
+
+  const oldTokens = [];
+  const newTokens = [];
+
+  // Prefix
+  for (let i = 0; i < prefixLen; i++) {
+    oldTokens.push({ text: oldWords[i], type: "same" });
+    newTokens.push({ text: newWords[i], type: "same" });
+  }
+
+  // Middle alterations
+  for (let i = prefixLen; i < oldWords.length - suffixLen; i++) {
+    oldTokens.push({ text: oldWords[i], type: "removed" });
+  }
+  for (let i = prefixLen; i < newWords.length - suffixLen; i++) {
+    newTokens.push({ text: newWords[i], type: "added" });
+  }
+
+  // Suffix
+  for (let i = oldWords.length - suffixLen; i < oldWords.length; i++) {
+    oldTokens.push({ text: oldWords[i], type: "same" });
+  }
+  for (let i = newWords.length - suffixLen; i < newWords.length; i++) {
+    newTokens.push({ text: newWords[i], type: "same" });
+  }
+
+  return { oldTokens, newTokens };
+}
+
+// Token Renderer with Highlight Marks
+function DiffTokenText({ tokens }) {
+  if (!tokens || tokens.length === 0) return <span>—</span>;
+  return (
+    <span>
+      {tokens.map((tok, idx) => {
+        if (tok.type === "removed") {
+          return (
+            <mark key={idx} className="redline-mark-del">
+              {tok.text}
+            </mark>
+          );
+        }
+        if (tok.type === "added") {
+          return (
+            <mark key={idx} className="redline-mark-add">
+              {tok.text}
+            </mark>
+          );
+        }
+        return <span key={idx}>{tok.text}</span>;
+      })}
+    </span>
+  );
+}
+
 // Pure Helper to create a serializable history item
 function createHistoryAuditItem(auditData, oldFileName, newFileName, mode) {
   return {
@@ -1262,6 +1367,7 @@ export default function App() {
   const [severityFilter, setSeverityFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [sortBy, setSortBy] = useState("default");
+  const [viewMode, setViewMode] = useState("cards"); // "cards" | "split" | "unified"
 
   // Extract unique categories from audit changes
   const uniqueCategories = useMemo(() => {
@@ -1969,6 +2075,37 @@ export default function App() {
                       <option value="alphabetical">Title (A → Z)</option>
                     </select>
                   </div>
+
+                  {/* View Mode Segmented Controls */}
+                  <div className="view-mode-selector">
+                    <button
+                      type="button"
+                      className={`view-mode-btn ${viewMode === "cards" ? "active" : ""}`}
+                      onClick={() => setViewMode("cards")}
+                      title="Card Summary View"
+                    >
+                      <CardsIcon />
+                      <span>Cards</span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`view-mode-btn ${viewMode === "split" ? "active" : ""}`}
+                      onClick={() => setViewMode("split")}
+                      title="Side-by-Side Split Redline View"
+                    >
+                      <SplitIcon />
+                      <span>Split Redline</span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`view-mode-btn ${viewMode === "unified" ? "active" : ""}`}
+                      onClick={() => setViewMode("unified")}
+                      title="Unified Inline Redline View"
+                    >
+                      <UnifiedIcon />
+                      <span>Unified</span>
+                    </button>
+                  </div>
                 </div>
 
                 {/* Secondary Row: Category Filter Chips & Status Indicator */}
@@ -2020,37 +2157,176 @@ export default function App() {
 
             {result.changes && result.changes.length > 0 ? (
               filteredChanges.length > 0 ? (
-                <div className="diff-list">
-                  {filteredChanges.map((item, idx) => (
-                    <div key={idx} className={`diff-card ${item.importance}`}>
-                      <div className="diff-card-head">
-                        <span className={`chip type-${(item.type || "modified").toLowerCase().replace(/[^a-z0-9]/g, "-")}`}>
-                          {item.type || "Modified"}
-                        </span>
-                        <span className={`chip priority-${item.importance || "normal"}`}>
-                          {item.importance === "important" ? "Critical Priority" : "Standard"}
-                        </span>
-                        <span className="diff-title">{item.title}</span>
-                      </div>
+                <>
+                  {/* 1. Cards View */}
+                  {viewMode === "cards" && (
+                    <div className="diff-list">
+                      {filteredChanges.map((item, idx) => (
+                        <div key={idx} className={`diff-card ${item.importance}`}>
+                          <div className="diff-card-head">
+                            <span className={`chip type-${(item.type || "modified").toLowerCase().replace(/[^a-z0-9]/g, "-")}`}>
+                              {item.type || "Modified"}
+                            </span>
+                            <span className={`chip priority-${item.importance || "normal"}`}>
+                              {item.importance === "important" ? "Critical Priority" : "Standard"}
+                            </span>
+                            <span className="diff-title">{item.title}</span>
+                          </div>
 
-                      <div className="diff-values">
-                        <div className="val-box val-old">
-                          <span className="val-tag">Previous Version</span>
-                          <div className="val-text">{item.oldValue || "—"}</div>
-                        </div>
-                        <div className="val-arrow">→</div>
-                        <div className="val-box val-new">
-                          <span className="val-tag">Revised Version</span>
-                          <div className="val-text">{item.newValue || "—"}</div>
-                        </div>
-                      </div>
+                          <div className="diff-values">
+                            <div className="val-box val-old">
+                              <span className="val-tag">Previous Version</span>
+                              <div className="val-text">{item.oldValue || "—"}</div>
+                            </div>
+                            <div className="val-arrow">→</div>
+                            <div className="val-box val-new">
+                              <span className="val-tag">Revised Version</span>
+                              <div className="val-text">{item.newValue || "—"}</div>
+                            </div>
+                          </div>
 
-                      {item.explanation && (
-                        <p className="diff-desc">{item.explanation}</p>
-                      )}
+                          {item.explanation && (
+                            <p className="diff-desc">{item.explanation}</p>
+                          )}
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  )}
+
+                  {/* 2. Side-by-Side Split Redline View */}
+                  {viewMode === "split" && (
+                    <div className="split-redline-container">
+                      <div className="split-redline-header-row">
+                        <div className="split-header-pane split-header-old">
+                          <div className="pane-title-badge">
+                            <span className="pane-sign-minus">-</span>
+                            <span>ORIGINAL (PREVIOUS VERSION)</span>
+                          </div>
+                          <span className="pane-file-title" title={oldFile?.name}>{oldFile?.name || "Version 1"}</span>
+                        </div>
+
+                        <div className="split-header-pane split-header-new">
+                          <div className="pane-title-badge">
+                            <span className="pane-sign-plus">+</span>
+                            <span>REVISED (TARGET VERSION)</span>
+                          </div>
+                          <span className="pane-file-title" title={newFile?.name}>{newFile?.name || "Version 2"}</span>
+                        </div>
+                      </div>
+
+                      <div className="split-blocks-stream">
+                        {filteredChanges.map((item, idx) => {
+                          const { oldTokens, newTokens } = computeWordDiff(item.oldValue, item.newValue);
+                          const lineNum = String(idx + 1).padStart(2, "0");
+                          return (
+                            <div key={idx} className={`split-diff-block ${item.importance}`}>
+                              <div className="split-block-top">
+                                <div className="split-block-title-row">
+                                  <span className="split-line-badge">DIFF #{lineNum}</span>
+                                  <span className={`chip priority-${item.importance || "normal"}`}>
+                                    {item.importance === "important" ? "Critical Priority" : "Standard"}
+                                  </span>
+                                  <span className={`chip type-${(item.type || "modified").toLowerCase().replace(/[^a-z0-9]/g, "-")}`}>
+                                    {item.type || "Modified"}
+                                  </span>
+                                  <h4 className="split-block-title">{item.title}</h4>
+                                </div>
+                              </div>
+
+                              <div className="split-panes-row">
+                                <div className="split-pane split-pane-left">
+                                  <div className="split-gutter">
+                                    <span className="split-num">L{lineNum}</span>
+                                    <span className="split-marker-minus">-</span>
+                                  </div>
+                                  <div className="split-code-content code-del">
+                                    <DiffTokenText tokens={oldTokens} />
+                                  </div>
+                                </div>
+
+                                <div className="split-pane split-pane-right">
+                                  <div className="split-gutter">
+                                    <span className="split-num">R{lineNum}</span>
+                                    <span className="split-marker-plus">+</span>
+                                  </div>
+                                  <div className="split-code-content code-add">
+                                    <DiffTokenText tokens={newTokens} />
+                                  </div>
+                                </div>
+                              </div>
+
+                              {item.explanation && (
+                                <div className="split-block-analysis">
+                                  <span className="analysis-tag">Impact Analysis:</span>
+                                  <span className="analysis-text">{item.explanation}</span>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 3. Unified Inline Redline View */}
+                  {viewMode === "unified" && (
+                    <div className="unified-redline-container">
+                      <div className="unified-header-bar">
+                        <span>UNIFIED REDLINE STREAM • {filteredChanges.length} DISCREPANCIES</span>
+                        <span className="unified-legend">
+                          <span className="legend-del">- Deletions</span>
+                          <span className="legend-add">+ Additions</span>
+                        </span>
+                      </div>
+
+                      <div className="unified-blocks-stream">
+                        {filteredChanges.map((item, idx) => {
+                          const { oldTokens, newTokens } = computeWordDiff(item.oldValue, item.newValue);
+                          const lineNum = String(idx + 1).padStart(2, "0");
+                          return (
+                            <div key={idx} className={`unified-diff-card ${item.importance}`}>
+                              <div className="unified-card-head">
+                                <span className="unified-line-badge">DIFF #{lineNum}</span>
+                                <span className={`chip priority-${item.importance || "normal"}`}>
+                                  {item.importance === "important" ? "Critical" : "Standard"}
+                                </span>
+                                <span className="unified-card-title">{item.title}</span>
+                              </div>
+
+                              <div className="unified-code-table">
+                                <div className="unified-code-row row-del">
+                                  <div className="unified-gutter">
+                                    <span className="line-num">{lineNum}</span>
+                                    <span className="line-sign">-</span>
+                                  </div>
+                                  <div className="unified-code-text code-del">
+                                    <DiffTokenText tokens={oldTokens} />
+                                  </div>
+                                </div>
+
+                                <div className="unified-code-row row-add">
+                                  <div className="unified-gutter">
+                                    <span className="line-num">{lineNum}</span>
+                                    <span className="line-sign">+</span>
+                                  </div>
+                                  <div className="unified-code-text code-add">
+                                    <DiffTokenText tokens={newTokens} />
+                                  </div>
+                                </div>
+                              </div>
+
+                              {item.explanation && (
+                                <div className="unified-analysis-note">
+                                  <strong>Impact Analysis:</strong> {item.explanation}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="diff-no-match-box">
                   <div className="no-match-icon">🔍</div>
