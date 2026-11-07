@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { jsPDF } from "jspdf";
 import "./App.css";
 
@@ -30,6 +30,19 @@ const CloseIcon = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
     <line x1="18" y1="6" x2="6" y2="18" />
     <line x1="6" y1="6" x2="18" y2="18" />
+  </svg>
+);
+
+const SearchIcon = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="11" cy="11" r="8" />
+    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+  </svg>
+);
+
+const FilterIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
   </svg>
 );
 
@@ -1051,6 +1064,67 @@ export default function App() {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [showSpeechBubble, setShowSpeechBubble] = useState(false);
 
+  // Discrepancy Search, Filtering & Sorting State
+  const [searchQuery, setSearchQuery] = useState("");
+  const [severityFilter, setSeverityFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("default");
+
+  // Extract unique categories from audit changes
+  const uniqueCategories = useMemo(() => {
+    if (!result?.changes) return [];
+    const set = new Set();
+    result.changes.forEach((c) => {
+      if (c.type) set.add(c.type);
+    });
+    return Array.from(set);
+  }, [result]);
+
+  // Filter and sort discrepancies
+  const filteredChanges = useMemo(() => {
+    if (!result?.changes) return [];
+    let list = [...result.changes];
+
+    // 1. Severity filter
+    if (severityFilter !== "all") {
+      list = list.filter((c) => c.importance === severityFilter);
+    }
+
+    // 2. Category filter
+    if (categoryFilter !== "all") {
+      list = list.filter((c) => c.type === categoryFilter);
+    }
+
+    // 3. Keyword search filter
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      list = list.filter((c) =>
+        (c.title || "").toLowerCase().includes(q) ||
+        (c.explanation || "").toLowerCase().includes(q) ||
+        (c.oldValue || "").toLowerCase().includes(q) ||
+        (c.newValue || "").toLowerCase().includes(q) ||
+        (c.type || "").toLowerCase().includes(q)
+      );
+    }
+
+    // 4. Sorting
+    if (sortBy === "critical-first") {
+      list.sort((a, b) => {
+        if (a.importance === "important" && b.importance !== "important") return -1;
+        if (a.importance !== "important" && b.importance === "important") return 1;
+        return 0;
+      });
+    } else if (sortBy === "alphabetical") {
+      list.sort((a, b) => (a.title || "").localeCompare(b.title || ""));
+    }
+
+    return list;
+  }, [result, severityFilter, categoryFilter, searchQuery, sortBy]);
+
+  const totalCount = result?.changes?.length || 0;
+  const criticalCount = result?.changes?.filter((c) => c.importance === "important").length || 0;
+  const standardCount = result?.changes?.filter((c) => c.importance !== "important").length || 0;
+
   const oldInputRef = useRef(null);
   const newInputRef = useRef(null);
   const resultsRef = useRef(null);
@@ -1099,6 +1173,10 @@ export default function App() {
         throw new Error(data.error || "Failed to compare documents.");
       }
       setResult(data);
+      setSearchQuery("");
+      setSeverityFilter("all");
+      setCategoryFilter("all");
+      setSortBy("default");
       setChatMessages([getInitialChatMessage(data, currentMode)]);
       setTimeout(() => {
         resultsRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -1123,6 +1201,10 @@ export default function App() {
       isDemo: true
     });
     setResult(modeToLoad.demoData);
+    setSearchQuery("");
+    setSeverityFilter("all");
+    setCategoryFilter("all");
+    setSortBy("default");
     setChatMessages([getInitialChatMessage(modeToLoad.demoData, modeToLoad)]);
     showToast(`Loaded ${modeToLoad.name} Demo Data`);
     setTimeout(() => {
@@ -1173,6 +1255,10 @@ export default function App() {
     setOldFile(null);
     setNewFile(null);
     setResult(null);
+    setSearchQuery("");
+    setSeverityFilter("all");
+    setCategoryFilter("all");
+    setSortBy("default");
     setError(null);
     setChatMessages([]);
     setChatInput("");
@@ -1593,38 +1679,179 @@ export default function App() {
               </div>
             </div>
 
-            {result.changes && result.changes.length > 0 ? (
-              <div className="diff-list">
-                {result.changes.map((item, idx) => (
-                  <div key={idx} className={`diff-card ${item.importance}`}>
-                    <div className="diff-card-head">
-                      <span className={`chip type-${(item.type || "modified").toLowerCase().replace(/[^a-z0-9]/g, "-")}`}>
-                        {item.type || "Modified"}
-                      </span>
-                      <span className={`chip priority-${item.importance || "normal"}`}>
-                        {item.importance === "important" ? "Critical Priority" : "Standard"}
-                      </span>
-                      <span className="diff-title">{item.title}</span>
-                    </div>
-
-                    <div className="diff-values">
-                      <div className="val-box val-old">
-                        <span className="val-tag">Previous Version</span>
-                        <div className="val-text">{item.oldValue || "—"}</div>
-                      </div>
-                      <div className="val-arrow">→</div>
-                      <div className="val-box val-new">
-                        <span className="val-tag">Revised Version</span>
-                        <div className="val-text">{item.newValue || "—"}</div>
-                      </div>
-                    </div>
-
-                    {item.explanation && (
-                      <p className="diff-desc">{item.explanation}</p>
+            {/* Interactive Discrepancy Search, Severity & Category Filter Bar */}
+            {result.changes && result.changes.length > 0 && (
+              <div className="diff-filter-toolbar">
+                <div className="filter-toolbar-main">
+                  {/* Search Input Box */}
+                  <div className="diff-search-box">
+                    <span className="diff-search-icon"><SearchIcon /></span>
+                    <input
+                      type="text"
+                      className="diff-search-input"
+                      placeholder="Search discrepancies by keyword, value, or clause..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                    {searchQuery && (
+                      <button
+                        type="button"
+                        className="btn-clear-search"
+                        onClick={() => setSearchQuery("")}
+                        title="Clear search"
+                      >
+                        <CloseIcon />
+                      </button>
                     )}
                   </div>
-                ))}
+
+                  {/* Severity Filter Tabs */}
+                  <div className="severity-tabs">
+                    <button
+                      type="button"
+                      className={`severity-tab ${severityFilter === "all" ? "active" : ""}`}
+                      onClick={() => setSeverityFilter("all")}
+                    >
+                      <span>All</span>
+                      <span className="tab-count">{totalCount}</span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`severity-tab severity-tab-critical ${severityFilter === "important" ? "active" : ""}`}
+                      onClick={() => setSeverityFilter("important")}
+                    >
+                      <span className="tab-dot dot-critical" />
+                      <span>Critical Priority</span>
+                      <span className="tab-count count-critical">{criticalCount}</span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`severity-tab severity-tab-standard ${severityFilter === "standard" ? "active" : ""}`}
+                      onClick={() => setSeverityFilter("standard")}
+                    >
+                      <span className="tab-dot dot-standard" />
+                      <span>Standard</span>
+                      <span className="tab-count count-standard">{standardCount}</span>
+                    </button>
+                  </div>
+
+                  {/* Sort By Dropdown */}
+                  <div className="sort-control">
+                    <label htmlFor="diff-sort-select" className="sort-label">Sort:</label>
+                    <select
+                      id="diff-sort-select"
+                      className="diff-sort-select"
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value)}
+                    >
+                      <option value="default">Document Order</option>
+                      <option value="critical-first">Critical Priority First</option>
+                      <option value="alphabetical">Title (A → Z)</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Secondary Row: Category Filter Chips & Status Indicator */}
+                <div className="filter-toolbar-sub">
+                  <div className="category-chips-strip">
+                    <span className="category-strip-label"><FilterIcon /> Category:</span>
+                    <button
+                      type="button"
+                      className={`category-chip ${categoryFilter === "all" ? "active" : ""}`}
+                      onClick={() => setCategoryFilter("all")}
+                    >
+                      All Types
+                    </button>
+                    {uniqueCategories.map((cat, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        className={`category-chip ${categoryFilter === cat ? "active" : ""}`}
+                        onClick={() => setCategoryFilter(categoryFilter === cat ? "all" : cat)}
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Status Indicator / Active Filter Count */}
+                  <div className="filter-match-count">
+                    <span>
+                      Showing <strong>{filteredChanges.length}</strong> of <strong>{totalCount}</strong> changes
+                    </span>
+                    {(searchQuery || severityFilter !== "all" || categoryFilter !== "all" || sortBy !== "default") && (
+                      <button
+                        type="button"
+                        className="btn-reset-filters"
+                        onClick={() => {
+                          setSearchQuery("");
+                          setSeverityFilter("all");
+                          setCategoryFilter("all");
+                          setSortBy("default");
+                        }}
+                      >
+                        Reset Filters
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
+            )}
+
+            {result.changes && result.changes.length > 0 ? (
+              filteredChanges.length > 0 ? (
+                <div className="diff-list">
+                  {filteredChanges.map((item, idx) => (
+                    <div key={idx} className={`diff-card ${item.importance}`}>
+                      <div className="diff-card-head">
+                        <span className={`chip type-${(item.type || "modified").toLowerCase().replace(/[^a-z0-9]/g, "-")}`}>
+                          {item.type || "Modified"}
+                        </span>
+                        <span className={`chip priority-${item.importance || "normal"}`}>
+                          {item.importance === "important" ? "Critical Priority" : "Standard"}
+                        </span>
+                        <span className="diff-title">{item.title}</span>
+                      </div>
+
+                      <div className="diff-values">
+                        <div className="val-box val-old">
+                          <span className="val-tag">Previous Version</span>
+                          <div className="val-text">{item.oldValue || "—"}</div>
+                        </div>
+                        <div className="val-arrow">→</div>
+                        <div className="val-box val-new">
+                          <span className="val-tag">Revised Version</span>
+                          <div className="val-text">{item.newValue || "—"}</div>
+                        </div>
+                      </div>
+
+                      {item.explanation && (
+                        <p className="diff-desc">{item.explanation}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="diff-no-match-box">
+                  <div className="no-match-icon">🔍</div>
+                  <h4>No matching discrepancies found</h4>
+                  <p>
+                    {searchQuery ? `No changes matched "${searchQuery}".` : "No discrepancies found for the active filter."}
+                  </p>
+                  <button
+                    type="button"
+                    className="btn-secondary btn-clear-filters-action"
+                    onClick={() => {
+                      setSearchQuery("");
+                      setSeverityFilter("all");
+                      setCategoryFilter("all");
+                      setSortBy("default");
+                    }}
+                  >
+                    Clear Search & Filters
+                  </button>
+                </div>
+              )
             ) : (
               <div className="empty-notice">
                 <p>No structural, textual, or numerical differences identified between these documents.</p>
