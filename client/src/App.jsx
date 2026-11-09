@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { jsPDF } from "jspdf";
+import { track } from "@vercel/analytics";
 import "./App.css";
 
 const API_BASE_URL = "https://changewatch.onrender.com";
@@ -1537,6 +1538,12 @@ export default function App() {
       }
       setResult(data);
       saveAuditToHistory(data, oldFile.name, newFile.name, currentMode);
+      try {
+        track("document_audit_completed", {
+          mode: selectedModeId,
+          changesCount: data.totalChanges || (data.changes ? data.changes.length : 0),
+        });
+      } catch {}
       setSearchQuery("");
       setSeverityFilter("all");
       setCategoryFilter("all");
@@ -1566,6 +1573,9 @@ export default function App() {
     });
     setResult(modeToLoad.demoData);
     saveAuditToHistory(modeToLoad.demoData, modeToLoad.demoData.oldName, modeToLoad.demoData.newName, modeToLoad);
+    try {
+      track("sample_demo_loaded", { mode: modeToLoad.id });
+    } catch {}
     setSearchQuery("");
     setSeverityFilter("all");
     setCategoryFilter("all");
@@ -1598,6 +1608,9 @@ export default function App() {
 
   const triggerPdfDownload = () => {
     if (!result) return;
+    try {
+      track("export_pdf_downloaded", { mode: selectedModeId });
+    } catch {}
     executePdfExport(
       result,
       oldFile,
@@ -1613,11 +1626,17 @@ export default function App() {
 
   const triggerTextDownload = () => {
     if (!result) return;
+    try {
+      track("export_text_downloaded", { mode: selectedModeId });
+    } catch {}
     executeTextExport(result, oldFile, newFile, currentMode, () => showToast("Downloaded text audit report!"));
   };
 
   const triggerCsvDownload = () => {
     if (!result) return;
+    try {
+      track("export_csv_downloaded", { mode: selectedModeId });
+    } catch {}
     executeCsvExport(result, oldFile, newFile, currentMode, () =>
       showToast("Downloaded Excel / CSV Discrepancy Sheet!")
     );
@@ -1657,6 +1676,10 @@ export default function App() {
     setChatMessages(nextHistory);
     setChatInput("");
     setChatLoading(true);
+
+    try {
+      track("ai_assistant_chat_sent", { hasAuditResult: !!result });
+    } catch {}
 
     setTimeout(() => {
       chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
