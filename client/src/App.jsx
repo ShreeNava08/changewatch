@@ -1543,7 +1543,9 @@ export default function App() {
           mode: selectedModeId,
           changesCount: data.totalChanges || (data.changes ? data.changes.length : 0),
         });
-      } catch {}
+      } catch (err) {
+        void err;
+      }
       setSearchQuery("");
       setSeverityFilter("all");
       setCategoryFilter("all");
@@ -1575,7 +1577,9 @@ export default function App() {
     saveAuditToHistory(modeToLoad.demoData, modeToLoad.demoData.oldName, modeToLoad.demoData.newName, modeToLoad);
     try {
       track("sample_demo_loaded", { mode: modeToLoad.id });
-    } catch {}
+    } catch (err) {
+      void err;
+    }
     setSearchQuery("");
     setSeverityFilter("all");
     setCategoryFilter("all");
@@ -1610,7 +1614,9 @@ export default function App() {
     if (!result) return;
     try {
       track("export_pdf_downloaded", { mode: selectedModeId });
-    } catch {}
+    } catch (err) {
+      void err;
+    }
     executePdfExport(
       result,
       oldFile,
@@ -1628,7 +1634,9 @@ export default function App() {
     if (!result) return;
     try {
       track("export_text_downloaded", { mode: selectedModeId });
-    } catch {}
+    } catch (err) {
+      void err;
+    }
     executeTextExport(result, oldFile, newFile, currentMode, () => showToast("Downloaded text audit report!"));
   };
 
@@ -1636,7 +1644,9 @@ export default function App() {
     if (!result) return;
     try {
       track("export_csv_downloaded", { mode: selectedModeId });
-    } catch {}
+    } catch (err) {
+      void err;
+    }
     executeCsvExport(result, oldFile, newFile, currentMode, () =>
       showToast("Downloaded Excel / CSV Discrepancy Sheet!")
     );
@@ -1679,7 +1689,9 @@ export default function App() {
 
     try {
       track("ai_assistant_chat_sent", { hasAuditResult: !!result });
-    } catch {}
+    } catch (err) {
+      void err;
+    }
 
     setTimeout(() => {
       chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
